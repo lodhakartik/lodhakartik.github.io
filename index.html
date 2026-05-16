@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Kartik Lodha</title>
+  <meta name="description" content="Jain learning games for kids, by Kartik Lodha." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Yatra+One&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --parchment-dark:  #E5CE8A;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --shadow-soft: 0 2px 0 rgba(58, 31, 14, 0.10), 0 6px 18px rgba(58, 31, 14, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(200, 161, 75, 0.18), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(122, 29, 29, 0.10), transparent 40%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+
+    .hero { text-align: center; padding: 32px 0 24px; }
+    .hero .om {
+      font-family: "Yatra One", serif;
+      font-size: 64px;
+      color: var(--maroon);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .hero h1 {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 56px;
+      margin: 0;
+      color: var(--maroon);
+      letter-spacing: 0.5px;
+    }
+    .hero p {
+      font-size: 20px;
+      color: var(--ink-soft);
+      max-width: 540px;
+      margin: 8px auto 0;
+    }
+
+    .section-title {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 40px;
+      color: var(--gold-deep);
+      text-align: center;
+      margin: 40px 0 24px;
+      position: relative;
+    }
+    .section-title::after {
+      content: "";
+      display: block;
+      width: 80px;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 2px;
+      margin: 8px auto 0;
+    }
+
+    .games {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .game-card {
+      background: rgba(255, 255, 255, 0.55);
+      border: 2px solid var(--gold);
+      border-radius: 18px;
+      padding: 24px 20px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 0 rgba(58, 31, 14, 0.10), 0 10px 24px rgba(58, 31, 14, 0.16);
+    }
+    .game-card.coming-soon {
+      opacity: 0.55;
+      filter: saturate(0.7);
+    }
+
+    .game-emblem {
+      font-size: 56px;
+      line-height: 1;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .game-name {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--maroon);
+      margin: 0;
+      text-align: center;
+    }
+    .game-desc {
+      font-size: 17px;
+      color: var(--ink-soft);
+      margin: 0;
+      text-align: center;
+      flex: 1;
+    }
+    .game-meta {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-height: 22px;
+    }
+    .play-count-badge {
+      font-size: 14px;
+      color: var(--gold-deep);
+      opacity: 0.85;
+    }
+    .play-button {
+      display: inline-block;
+      text-align: center;
+      background: var(--maroon);
+      color: #FFF8E7;
+      text-decoration: none;
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 22px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      box-shadow: var(--shadow-soft);
+      transition: transform 150ms ease, background 150ms ease;
+    }
+    .play-button:hover { background: #5C1414; transform: scale(1.04); }
+    .play-button.disabled {
+      background: var(--parchment-dark);
+      color: var(--ink-soft);
+      pointer-events: none;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 56px;
+      font-size: 15px;
+      color: var(--ink-soft);
+      opacity: 0.8;
+    }
+    footer a { color: var(--gold-deep); }
+
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 44px; }
+      .hero .om { font-size: 52px; }
+      .section-title { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div class="om" aria-hidden="true">&#x950;</div>
+      <h1>Kartik Lodha</h1>
+      <p>Jain learning games for children &mdash; little tales, gentle mantras, and lots of lotuses.</p>
+    </header>
+
+    <section>
+      <h2 class="section-title">Jain Games</h2>
+      <div class="games">
+
+        <article class="game-card">
+          <div class="game-emblem" aria-hidden="true">&#x1F33C;</div>
+          <h3 class="game-name">My First Navkar</h3>
+          <p class="game-desc">Drag the sacred lines into order to bloom a nine-petalled lotus. The first Navkar Mantra a child learns, in a puzzle.</p>
+          <div class="game-meta">
+            <span class="play-count-badge" id="count-my-first-navkar">&nbsp;</span>
+          </div>
+          <a class="play-button" href="https://lodhakartik.github.io/navkar-arrange/">Play &#x2192;</a>
+        </article>
+
+        <article class="game-card coming-soon">
+          <div class="game-emblem" aria-hidden="true">&#x1F4DC;</div>
+          <h3 class="game-name">Coming Soon</h3>
+          <p class="game-desc">More Jain stories &amp; games in the works.</p>
+          <div class="game-meta"><span class="play-count-badge">&nbsp;</span></div>
+          <span class="play-button disabled">Soon</span>
+        </article>
+
+      </div>
+    </section>
+
+    <footer>
+      <p>Made with care &middot; <a href="https://github.com/lodhakartik" target="_blank" rel="noopener">github.com/lodhakartik</a></p>
+    </footer>
+  </main>
+
+  <script>
+    // Read-only play count from the same counter the game increments on open.
+    async function loadCount(counterName, elementId) {
+      try {
+        const res = await fetch(`https://api.counterapi.dev/v1/lodhakartik/${counterName}/`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const count = Number(data.count);
+        if (!count) return;
+        const el = document.getElementById(elementId);
+        if (el) el.textContent = `${count.toLocaleString()} plays`;
+      } catch { /* silent */ }
+    }
+    loadCount("my-first-navkar", "count-my-first-navkar");
+  </script>
+</body>
+</html>
