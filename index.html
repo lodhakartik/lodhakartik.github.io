@@ -290,6 +290,16 @@
           <a class="play-button" href="https://lodhakartik.github.io/jain-gyan-chaupar/">Play &#x2192;</a>
         </article>
 
+        <article class="game-card">
+          <div class="game-emblem" aria-hidden="true">&#x1F4DC;</div>
+          <h3 class="game-name">Navkar Scramble</h3>
+          <p class="game-desc">Unscramble the words and aksharas of every Navkar Mantra line on an ink-and-parchment scroll. Eighteen Devanagari-only puzzles.</p>
+          <div class="game-meta">
+            <span class="play-count-badge" id="count-navkar-scramble">&#x1F338; &#x2026;</span>
+          </div>
+          <a class="play-button" href="https://lodhakartik.github.io/navkar-scramble/">Play &#x2192;</a>
+        </article>
+
       </div>
     </section>
 
@@ -331,6 +341,15 @@
       const el = document.getElementById("count-jain-gyan-chaupar");
       if (!el) return;
       const n = await fetchCount("jain-gyan-chaupar");
+      el.textContent = n == null
+        ? "\u{1F338} a new game"
+        : `\u{1F338} ${n.toLocaleString()} plays`;
+    })();
+
+    (async () => {
+      const el = document.getElementById("count-navkar-scramble");
+      if (!el) return;
+      const n = await fetchCount("navkar-scramble");
       el.textContent = n == null
         ? "\u{1F338} a new game"
         : `\u{1F338} ${n.toLocaleString()} plays`;
