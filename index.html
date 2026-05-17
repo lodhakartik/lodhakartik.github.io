@@ -174,16 +174,87 @@
     footer {
       text-align: center;
       margin-top: 56px;
+      margin-bottom: 90px;
       font-size: 15px;
       color: var(--ink-soft);
       opacity: 0.8;
     }
     footer a { color: var(--gold-deep); }
 
+    /* ----- wooden view-count plaque, lower-right ----- */
+    .view-plaque {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 50;
+      padding: 10px 18px 8px;
+      border: 2px solid #2E1A0A;
+      border-radius: 10px;
+      text-align: center;
+      background-color: #6B4423;
+      background-image:
+        repeating-linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 0.10) 0px,
+          rgba(0, 0, 0, 0.10) 1px,
+          transparent 1px,
+          transparent 6px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          rgba(255, 220, 170, 0.05) 0px,
+          rgba(255, 220, 170, 0.05) 2px,
+          transparent 2px,
+          transparent 11px
+        ),
+        linear-gradient(135deg, #7A4E26 0%, #4A2E14 55%, #6B4423 100%);
+      box-shadow:
+        0 6px 14px rgba(0, 0, 0, 0.30),
+        inset 0 1px 0 rgba(255, 230, 190, 0.15),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+      min-width: 86px;
+      user-select: none;
+    }
+    /* tiny gold "pins" in the corners — like a mounted plaque */
+    .view-plaque::before,
+    .view-plaque::after {
+      content: "";
+      position: absolute;
+      width: 5px; height: 5px;
+      background: radial-gradient(circle at 30% 30%, #F4D472, #8C6A1F 70%);
+      border-radius: 50%;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+    .view-plaque::before { top: 5px; left: 6px; }
+    .view-plaque::after  { top: 5px; right: 6px; }
+
+    .view-plaque .number {
+      display: block;
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 30px;
+      line-height: 1;
+      color: #FFFFFF;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.55);
+      letter-spacing: 0.5px;
+    }
+    .view-plaque .label {
+      display: block;
+      margin-top: 3px;
+      font-family: "Patrick Hand", cursive;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #F4D472;
+      opacity: 0.9;
+    }
+
     @media (max-width: 480px) {
       .hero h1 { font-size: 44px; }
       .hero .om { font-size: 52px; }
       .section-title { font-size: 32px; }
+      .view-plaque { bottom: 12px; right: 12px; padding: 8px 14px 6px; min-width: 74px; }
+      .view-plaque .number { font-size: 26px; }
     }
   </style>
 </head>
@@ -225,23 +296,42 @@
     </footer>
   </main>
 
+  <aside class="view-plaque" aria-label="Site views">
+    <span class="number" id="view-count">&mdash;</span>
+    <span class="label">Views</span>
+  </aside>
+
   <script>
-    // Read-only play count from the same counter the game increments on open.
-    async function loadCount(counterName, elementId) {
-      const el = document.getElementById(elementId);
-      if (!el) return;
+    const COUNTER_BASE = "https://api.counterapi.dev/v1/lodhakartik";
+
+    async function fetchCount(counterName, { bump = false } = {}) {
+      const url = `${COUNTER_BASE}/${counterName}/${bump ? "up" : ""}`;
       try {
-        const res = await fetch(`https://api.counterapi.dev/v1/lodhakartik/${counterName}/`, { cache: "no-store" });
-        if (!res.ok) throw new Error("bad status");
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return null;
         const data = await res.json();
-        const count = Number(data && data.count);
-        if (!Number.isFinite(count)) throw new Error("bad count");
-        el.textContent = `\u{1F338} ${count.toLocaleString()} plays`;
-      } catch {
-        el.textContent = "\u{1F338} a new game";
-      }
+        const n = Number(data && data.count);
+        return Number.isFinite(n) ? n : null;
+      } catch { return null; }
     }
-    loadCount("my-first-navkar", "count-my-first-navkar");
+
+    // Game play count (read-only).
+    (async () => {
+      const el = document.getElementById("count-my-first-navkar");
+      if (!el) return;
+      const n = await fetchCount("my-first-navkar");
+      el.textContent = n == null
+        ? "\u{1F338} a new game"
+        : `\u{1F338} ${n.toLocaleString()} plays`;
+    })();
+
+    // Site view count (increment once per page load).
+    (async () => {
+      const el = document.getElementById("view-count");
+      if (!el) return;
+      const n = await fetchCount("homepage-views", { bump: true });
+      el.textContent = n == null ? "\u2014" : n.toLocaleString();
+    })();
   </script>
 </body>
 </html>
