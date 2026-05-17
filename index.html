@@ -300,6 +300,16 @@
           <a class="play-button" href="https://lodhakartik.github.io/navkar-scramble/">Play &#x2192;</a>
         </article>
 
+        <article class="game-card">
+          <div class="game-emblem" aria-hidden="true">&#x1F520;</div>
+          <h3 class="game-name">ABCD of Jainism</h3>
+          <p class="game-desc">Meet a Jain value behind every letter A to Z. Four playful games &mdash; learn, quiz, memory match, drag &mdash; that teach kindness, truth, and peace.</p>
+          <div class="game-meta">
+            <span class="play-count-badge" id="count-jain-abcd-values">&#x1F338; &#x2026;</span>
+          </div>
+          <a class="play-button" href="https://lodhakartik.github.io/jain-abcd-values/">Play &#x2192;</a>
+        </article>
+
       </div>
     </section>
 
@@ -350,6 +360,15 @@
       const el = document.getElementById("count-navkar-scramble");
       if (!el) return;
       const n = await fetchCount("navkar-scramble");
+      el.textContent = n == null
+        ? "\u{1F338} a new game"
+        : `\u{1F338} ${n.toLocaleString()} plays`;
+    })();
+
+    (async () => {
+      const el = document.getElementById("count-jain-abcd-values");
+      if (!el) return;
+      const n = await fetchCount("jain-abcd-values");
       el.textContent = n == null
         ? "\u{1F338} a new game"
         : `\u{1F338} ${n.toLocaleString()} plays`;
