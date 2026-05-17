@@ -137,9 +137,17 @@
       min-height: 22px;
     }
     .play-count-badge {
-      font-size: 14px;
+      display: inline-block;
+      padding: 5px 14px;
+      font-family: "Patrick Hand", cursive;
+      font-size: 15px;
       color: var(--gold-deep);
-      opacity: 0.85;
+      background: rgba(255, 248, 225, 0.7);
+      border: 1.5px solid var(--gold);
+      border-radius: 999px;
+      min-width: 110px;
+      text-align: center;
+      letter-spacing: 0.3px;
     }
     .play-button {
       display: inline-block;
@@ -196,7 +204,7 @@
           <h3 class="game-name">My First Navkar</h3>
           <p class="game-desc">Drag the sacred lines into order to bloom a nine-petalled lotus. The first Navkar Mantra a child learns, in a puzzle.</p>
           <div class="game-meta">
-            <span class="play-count-badge" id="count-my-first-navkar">&nbsp;</span>
+            <span class="play-count-badge" id="count-my-first-navkar">&#x1F338; &#x2026;</span>
           </div>
           <a class="play-button" href="https://lodhakartik.github.io/navkar-arrange/">Play &#x2192;</a>
         </article>
@@ -205,7 +213,7 @@
           <div class="game-emblem" aria-hidden="true">&#x1F4DC;</div>
           <h3 class="game-name">Coming Soon</h3>
           <p class="game-desc">More Jain stories &amp; games in the works.</p>
-          <div class="game-meta"><span class="play-count-badge">&nbsp;</span></div>
+          <div class="game-meta"><span class="play-count-badge">coming soon</span></div>
           <span class="play-button disabled">Soon</span>
         </article>
 
@@ -220,15 +228,18 @@
   <script>
     // Read-only play count from the same counter the game increments on open.
     async function loadCount(counterName, elementId) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
       try {
         const res = await fetch(`https://api.counterapi.dev/v1/lodhakartik/${counterName}/`, { cache: "no-store" });
-        if (!res.ok) return;
+        if (!res.ok) throw new Error("bad status");
         const data = await res.json();
-        const count = Number(data.count);
-        if (!count) return;
-        const el = document.getElementById(elementId);
-        if (el) el.textContent = `${count.toLocaleString()} plays`;
-      } catch { /* silent */ }
+        const count = Number(data && data.count);
+        if (!Number.isFinite(count)) throw new Error("bad count");
+        el.textContent = `\u{1F338} ${count.toLocaleString()} plays`;
+      } catch {
+        el.textContent = "\u{1F338} a new game";
+      }
     }
     loadCount("my-first-navkar", "count-my-first-navkar");
   </script>
