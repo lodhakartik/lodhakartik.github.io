@@ -272,10 +272,10 @@
 
         <article class="game-card">
           <div class="game-emblem" aria-hidden="true">&#x1F33C;</div>
-          <h3 class="game-name">My First Navkar</h3>
-          <p class="game-desc">Drag the sacred lines into order to bloom a nine-petalled lotus. The first Navkar Mantra a child learns, in a puzzle.</p>
+          <h3 class="game-name">Navkar Arrange</h3>
+          <p class="game-desc">Arrange the sacred lines of the Navkar Mantra in the right order to bloom a nine-petalled lotus.</p>
           <div class="game-meta">
-            <span class="play-count-badge" id="count-my-first-navkar">&#x1F338; &#x2026;</span>
+            <span class="play-count-badge" id="count-navkar-arrange">&#x1F338; &#x2026;</span>
           </div>
           <a class="play-button" href="https://lodhakartik.github.io/navkar-arrange/">Play &#x2192;</a>
         </article>
@@ -339,9 +339,9 @@
 
     // Game play count (read-only).
     (async () => {
-      const el = document.getElementById("count-my-first-navkar");
+      const el = document.getElementById("count-navkar-arrange");
       if (!el) return;
-      const n = await fetchCount("my-first-navkar");
+      const n = await fetchCount("navkar-arrange");
       el.textContent = n == null
         ? "\u{1F338} a new game"
         : `\u{1F338} ${n.toLocaleString()} plays`;
