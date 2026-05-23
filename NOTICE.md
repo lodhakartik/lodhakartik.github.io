@@ -11,7 +11,7 @@ terms.
 
 ## What is **original** to Kartik Lodha (© 2026, all rights reserved unless licensed above)
 
-- The visual design of `kartiklodha.github.io` — colours, layout,
+- The visual design of `lodhakartik.github.io` — colours, layout,
   typography choices, parchment background, lotus emblem treatment.
 - All written copy on this site (game descriptions, taglines, microcopy).
 - The "Kartik Lodha" name and the lotus emblem (unregistered trademarks).

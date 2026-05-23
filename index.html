@@ -204,80 +204,27 @@
       margin: 8px 0 6px;
     }
 
-    /* ----- wooden view-count plaque, lower-right ----- */
-    .view-plaque {
-      position: fixed;
-      bottom: 18px;
-      right: 18px;
-      z-index: 50;
-      padding: 10px 18px 8px;
-      border: 2px solid #2E1A0A;
-      border-radius: 10px;
-      text-align: center;
-      background-color: #6B4423;
-      background-image:
-        repeating-linear-gradient(
-          90deg,
-          rgba(0, 0, 0, 0.10) 0px,
-          rgba(0, 0, 0, 0.10) 1px,
-          transparent 1px,
-          transparent 6px
-        ),
-        repeating-linear-gradient(
-          90deg,
-          rgba(255, 220, 170, 0.05) 0px,
-          rgba(255, 220, 170, 0.05) 2px,
-          transparent 2px,
-          transparent 11px
-        ),
-        linear-gradient(135deg, #7A4E26 0%, #4A2E14 55%, #6B4423 100%);
-      box-shadow:
-        0 6px 14px rgba(0, 0, 0, 0.30),
-        inset 0 1px 0 rgba(255, 230, 190, 0.15),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.35);
-      min-width: 86px;
-      user-select: none;
+    /* ----- visitor globe (mapmyvisitors) ----- */
+    .visitor-globe { margin-top: 56px; }
+    .visitor-globe .section-title { color: var(--maroon); opacity: 0.85; }
+    .globe-host {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 280px;
+      margin: 8px auto 0;
+      padding: 12px;
     }
-    /* tiny gold "pins" in the corners — like a mounted plaque */
-    .view-plaque::before,
-    .view-plaque::after {
-      content: "";
-      position: absolute;
-      width: 5px; height: 5px;
-      background: radial-gradient(circle at 30% 30%, #F4D472, #8C6A1F 70%);
-      border-radius: 50%;
-      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-    }
-    .view-plaque::before { top: 5px; left: 6px; }
-    .view-plaque::after  { top: 5px; right: 6px; }
-
-    .view-plaque .number {
-      display: block;
-      font-family: "Caveat", cursive;
-      font-weight: 700;
-      font-size: 30px;
-      line-height: 1;
-      color: #FFFFFF;
-      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.55);
-      letter-spacing: 0.5px;
-    }
-    .view-plaque .label {
-      display: block;
-      margin-top: 3px;
-      font-family: "Patrick Hand", cursive;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #F4D472;
-      opacity: 0.9;
-    }
+    .globe-host iframe,
+    .globe-host canvas,
+    .globe-host > div,
+    .globe-host > a img { max-width: 100%; height: auto; }
 
     @media (max-width: 480px) {
       .hero h1 { font-size: 44px; }
       .hero .om { font-size: 52px; }
       .section-title { font-size: 32px; }
-      .view-plaque { bottom: 12px; right: 12px; padding: 8px 14px 6px; min-width: 74px; }
-      .view-plaque .number { font-size: 26px; }
+      .globe-host { min-height: 220px; padding: 6px; }
     }
   </style>
 </head>
@@ -338,8 +285,15 @@
       </div>
     </section>
 
+    <section class="visitor-globe">
+      <h2 class="section-title">&#x1F30D; Visitors</h2>
+      <div class="globe-host">
+        <script type="text/javascript" id="mmvst_globe" src="//mapmyvisitors.com/globe.js?d=PlAHzQ-KGQa_fHj6e_rgeQxJ94y3r_dwLMJsDMqMgUs"></script>
+      </div>
+    </section>
+
     <footer>
-      <p class="copyline">&copy; 2026 Kartik Lodha &middot; <a href="https://kartiklodha.github.io">kartiklodha.github.io</a></p>
+      <p class="copyline">&copy; 2026 Kartik Lodha &middot; <a href="https://lodhakartik.github.io">lodhakartik.github.io</a></p>
       <span class="legal-sep" aria-hidden="true"></span>
       <p class="tinyline">Code <a href="LICENSE">MIT</a> &middot; Content &amp; assets <a href="LICENSE-CONTENT.md">CC&nbsp;BY-NC-ND&nbsp;4.0</a> &middot; <a href="NOTICE.md">Notices</a></p>
       <p class="tinyline">&ldquo;Kartik Lodha&rdquo; and the lotus emblem are unregistered trademarks of Kartik Lodha.</p>
@@ -347,11 +301,6 @@
       <p class="tinyline">Made with care &middot; <a href="https://github.com/lodhakartik" target="_blank" rel="noopener">github.com/lodhakartik</a></p>
     </footer>
   </main>
-
-  <aside class="view-plaque" aria-label="Site views">
-    <span class="number" id="view-count">&mdash;</span>
-    <span class="label">Views</span>
-  </aside>
 
   <script>
     const COUNTER_BASE = "https://api.counterapi.dev/v1/lodhakartik";
@@ -405,14 +354,6 @@
         : `\u{1F338} ${n.toLocaleString()} plays`;
     })();
     */
-
-    // Site view count (increment once per page load).
-    (async () => {
-      const el = document.getElementById("view-count");
-      if (!el) return;
-      const n = await fetchCount("homepage-views", { bump: true });
-      el.textContent = n == null ? "\u2014" : n.toLocaleString();
-    })();
   </script>
 </body>
 </html>
