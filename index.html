@@ -6,6 +6,9 @@
   <meta name="theme-color" content="#FFF8E7" />
   <title>Kartik Lodha</title>
   <meta name="description" content="Jain learning games for kids, by Kartik Lodha." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+  <meta name="copyright" content="© 2026 Kartik Lodha. All rights reserved." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -177,9 +180,29 @@
       margin-bottom: 90px;
       font-size: 15px;
       color: var(--ink-soft);
-      opacity: 0.8;
+      opacity: 0.85;
     }
     footer a { color: var(--gold-deep); }
+    footer .copyline {
+      font-family: "Caveat", cursive;
+      font-size: 22px;
+      margin: 0 0 6px;
+      color: var(--maroon);
+      opacity: 0.95;
+    }
+    footer .tinyline {
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 2px 0;
+      opacity: 0.75;
+    }
+    footer .legal-sep {
+      display: inline-block;
+      width: 36px;
+      border-top: 1px solid var(--gold);
+      opacity: 0.4;
+      margin: 8px 0 6px;
+    }
 
     /* ----- wooden view-count plaque, lower-right ----- */
     .view-plaque {
@@ -316,7 +339,12 @@
     </section>
 
     <footer>
-      <p>Made with care &middot; <a href="https://github.com/lodhakartik" target="_blank" rel="noopener">github.com/lodhakartik</a></p>
+      <p class="copyline">&copy; 2026 Kartik Lodha &middot; <a href="https://kartiklodha.github.io">kartiklodha.github.io</a></p>
+      <span class="legal-sep" aria-hidden="true"></span>
+      <p class="tinyline">Code <a href="LICENSE">MIT</a> &middot; Content &amp; assets <a href="LICENSE-CONTENT.md">CC&nbsp;BY-NC-ND&nbsp;4.0</a> &middot; <a href="NOTICE.md">Notices</a></p>
+      <p class="tinyline">&ldquo;Kartik Lodha&rdquo; and the lotus emblem are unregistered trademarks of Kartik Lodha.</p>
+      <p class="tinyline">Voiceovers, where used, are credited to their respective reciters &amp; singers &mdash; drawn from public-domain Jain tradition with due credit and respect.</p>
+      <p class="tinyline">Made with care &middot; <a href="https://github.com/lodhakartik" target="_blank" rel="noopener">github.com/lodhakartik</a></p>
     </footer>
   </main>
 
