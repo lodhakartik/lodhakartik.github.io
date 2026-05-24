@@ -316,43 +316,27 @@
       } catch { return null; }
     }
 
-    // Game play count (read-only).
-    (async () => {
-      const el = document.getElementById("count-navkar-arrange");
+    // Game play count (read-only). If the count API is blocked (e.g. by an
+    // ad-blocker), hide the badge entirely rather than show a misleading
+    // "a new game" label.
+    async function showPlayCount(elementId, counterName) {
+      const el = document.getElementById(elementId);
       if (!el) return;
-      const n = await fetchCount("navkar-arrange");
-      el.textContent = n == null
-        ? "\u{1F338} a new game"
-        : `\u{1F338} ${n.toLocaleString()} plays`;
-    })();
+      const n = await fetchCount(counterName);
+      if (n == null) {
+        el.hidden = true;
+        return;
+      }
+      el.hidden = false;
+      el.textContent = `\u{1F338} ${n.toLocaleString()} plays`;
+    }
+
+    showPlayCount("count-navkar-arrange", "navkar-arrange");
 
     /* Hidden for now — restore alongside the matching game cards above.
-    (async () => {
-      const el = document.getElementById("count-jain-gyan-chaupar");
-      if (!el) return;
-      const n = await fetchCount("jain-gyan-chaupar");
-      el.textContent = n == null
-        ? "\u{1F338} a new game"
-        : `\u{1F338} ${n.toLocaleString()} plays`;
-    })();
-
-    (async () => {
-      const el = document.getElementById("count-navkar-scramble");
-      if (!el) return;
-      const n = await fetchCount("navkar-scramble");
-      el.textContent = n == null
-        ? "\u{1F338} a new game"
-        : `\u{1F338} ${n.toLocaleString()} plays`;
-    })();
-
-    (async () => {
-      const el = document.getElementById("count-jain-abcd-values");
-      if (!el) return;
-      const n = await fetchCount("jain-abcd-values");
-      el.textContent = n == null
-        ? "\u{1F338} a new game"
-        : `\u{1F338} ${n.toLocaleString()} plays`;
-    })();
+    showPlayCount("count-jain-gyan-chaupar", "jain-gyan-chaupar");
+    showPlayCount("count-navkar-scramble",  "navkar-scramble");
+    showPlayCount("count-jain-abcd-values", "jain-abcd-values");
     */
   </script>
 </body>
