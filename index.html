@@ -204,27 +204,37 @@
       margin: 8px 0 6px;
     }
 
-    /* ----- visitor globe (mapmyvisitors) ----- */
-    .visitor-globe { margin-top: 56px; }
+    /* ----- visitor map (mapmyvisitors, image embed) ----- */
+    .visitor-globe { margin-top: 56px; margin-bottom: 8px; }
     .visitor-globe .section-title { color: var(--maroon); opacity: 0.85; }
     .globe-host {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 280px;
       margin: 8px auto 0;
       padding: 12px;
     }
-    .globe-host iframe,
-    .globe-host canvas,
-    .globe-host > div,
-    .globe-host > a img { max-width: 100%; height: auto; }
+    .globe-host a { display: inline-block; line-height: 0; }
+    .globe-host img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 14px;
+      border: 1px solid var(--gold);
+      box-shadow: var(--shadow-soft);
+    }
+    .visitor-globe .map-caption {
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-soft);
+      opacity: 0.7;
+      margin: 8px 0 0;
+    }
 
     @media (max-width: 480px) {
       .hero h1 { font-size: 44px; }
       .hero .om { font-size: 52px; }
       .section-title { font-size: 32px; }
-      .globe-host { min-height: 220px; padding: 6px; }
+      .globe-host { padding: 6px; }
     }
   </style>
 </head>
@@ -288,8 +298,11 @@
     <section class="visitor-globe">
       <h2 class="section-title">&#x1F30D; Visitors</h2>
       <div class="globe-host">
-        <script type="text/javascript" id="mmvst_globe" src="//mapmyvisitors.com/globe.js?d=PlAHzQ-KGQa_fHj6e_rgeQxJ94y3r_dwLMJsDMqMgUs"></script>
+        <a href="https://mapmyvisitors.com/web/1c4pa" target="_blank" rel="noopener" title="Visitor map for lodhakartik.github.io">
+          <img src="https://mapmyvisitors.com/map.png?d=fPonr8wIGFfoP89nUag0ABszWBS5R5OXuz1SVqFa7sM&amp;cl=ffffff" alt="World map of recent visitors to lodhakartik.github.io" loading="lazy" />
+        </a>
       </div>
+      <p class="map-caption">Click the map for the live visitor breakdown.</p>
     </section>
 
     <footer>
