@@ -125,10 +125,52 @@
       top: 0;
       left: 0;
       transform-origin: 0 0;
-      transition: transform 420ms cubic-bezier(0.4, 0.15, 0.2, 1);
+      transition: transform 620ms cubic-bezier(0.4, 0.0, 0.2, 1);
       will-change: transform;
       box-shadow: 0 8px 28px rgba(58,31,14,.18);
       background: #fff;
+    }
+    .wrap.no-anim { transition: none !important; }
+
+    /* page intro: title card */
+    .title-card {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 8;
+      opacity: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(58,31,14,0.55) 0%, rgba(58,31,14,0.86) 100%);
+      transition: opacity 520ms ease;
+      padding: 24px;
+    }
+    .title-card.visible { opacity: 1; }
+    .title-card-inner {
+      text-align: center;
+      transform: translateY(14px) scale(0.97);
+      transition: transform 620ms cubic-bezier(0.2, 0.7, 0.3, 1);
+    }
+    .title-card.visible .title-card-inner { transform: none; }
+    .title-card-eyebrow {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 26px;
+      color: var(--gold);
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      opacity: 0.9;
+    }
+    .title-card-text {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 60px;
+      color: #FFF8E7;
+      line-height: 1.1;
+      text-shadow: 0 4px 22px rgba(0,0,0,0.55);
+      max-width: 90vw;
+      margin: 0 auto;
     }
     .wrap canvas {
       display: block;
@@ -255,6 +297,8 @@
       .nav-prev { left: 8px; }
       .nav-next { right: 8px; }
       .indicator, .page-title { font-size: 17px; }
+      .title-card-eyebrow { font-size: 20px; letter-spacing: 1.1px; margin-bottom: 8px; }
+      .title-card-text { font-size: 40px; }
     }
   </style>
 </head>
@@ -275,6 +319,12 @@
   <main class="stage">
     <div class="frame" id="frame">
       <div class="wrap" id="wrap"></div>
+      <div class="title-card" id="titleCard" aria-hidden="true">
+        <div class="title-card-inner">
+          <div class="title-card-eyebrow" id="tcPage"></div>
+          <div class="title-card-text" id="tcTitle"></div>
+        </div>
+      </div>
     </div>
 
     <button class="nav-btn nav-prev" id="prevBtn" aria-label="Previous" disabled>&#x2039;</button>
@@ -315,6 +365,17 @@
     const renderCache = new Map();  // pdfPageNum -> canvas
     const inflight = new Map();     // pdfPageNum -> Promise<canvas>
 
+    // intro flow for entering a new page in panel mode
+    // states: null (no intro), 'page' (showing full page), 'title' (title card visible)
+    let introState = null;
+    let introTargetPanel = 0;
+    let introTimers = [];
+
+    // intro timings (ms)
+    const INTRO_PAGE_HOLD   = 1300;  // full page visible before the title card
+    const INTRO_TITLE_HOLD  = 1700;  // how long the title card stays on screen
+    const INTRO_FADE_OUT    = 560;   // wait for title-card fade before settling
+
     // ----- elements -----
     const el = (id) => document.getElementById(id);
     const wrap = el('wrap');
@@ -322,6 +383,7 @@
     const loadingOverlay = el('loadingOverlay');
     const errorOverlay = el('errorOverlay');
     const progressBar = el('progressBar');
+    const titleCard = el('titleCard');
 
     // ----- init -----
     function whenPdfJsReady() {
@@ -377,7 +439,15 @@
         }
 
         loadingOverlay.hidden = true;
-        await renderCurrent();
+        await mountPageCanvas();
+        const initialIntro = (panelIdx >= 0 && meta(pageIdx).panels.length > 0);
+        if (initialIntro) {
+          startPageIntro(panelIdx);
+        } else {
+          applyTransform();
+          updateUI();
+        }
+        updateHash();
         prefetchNeighbors();
         wireEvents();
       } catch (err) {
@@ -418,16 +488,27 @@
 
     function meta(idx) { return manifest.pages[idx]; }
 
-    async function renderCurrent() {
+    async function mountPageCanvas() {
       const m = meta(pageIdx);
       const canvas = await getPageCanvas(m.pdfPage);
-      // mount canvas
-      if (wrap.firstChild !== canvas) {
+      const isNewCanvas = wrap.firstChild !== canvas;
+      if (isNewCanvas) {
         while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
         wrap.appendChild(canvas);
       }
       wrap.style.width = canvas.width + 'px';
       wrap.style.height = canvas.height + 'px';
+      if (isNewCanvas) {
+        // snap to the new page without animating from the previous canvas's frame
+        wrap.classList.add('no-anim');
+        applyTransform();
+        requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.remove('no-anim')));
+      }
+    }
+
+    // Kept for back-compat with hashchange handler (page mode page change).
+    async function renderCurrent() {
+      await mountPageCanvas();
       applyTransform();
       updateUI();
       updateHash();
@@ -446,21 +527,87 @@
         return;
       }
       const m = meta(pageIdx);
+      const inIntro = introState !== null;
+      const showPanel = !inIntro && panelIdx >= 0 && m.panels && m.panels[panelIdx];
       let s, cx, cy;
-      if (panelIdx >= 0 && m.panels && m.panels[panelIdx]) {
+      if (showPanel) {
         const r = m.panels[panelIdx];
-        const pw = r.w * CW, ph = r.h * CH;
-        s = Math.min(vw / pw, vh / ph) * 0.94;
-        cx = (r.x + r.w / 2) * CW;
-        cy = (r.y + r.h / 2) * CH;
+        // expand the panel rect with a small margin so text near the edge isn't clipped
+        const MX = 0.018, MY = 0.012;
+        const x0 = Math.max(0, r.x - MX);
+        const y0 = Math.max(0, r.y - MY);
+        const x1 = Math.min(1, r.x + r.w + MX);
+        const y1 = Math.min(1, r.y + r.h + MY);
+        const ew = x1 - x0;
+        const eh = y1 - y0;
+        const pw = ew * CW, ph = eh * CH;
+        s = Math.min(vw / pw, vh / ph) * 0.90;
+        cx = (x0 + ew / 2) * CW;
+        cy = (y0 + eh / 2) * CH;
       } else {
-        s = Math.min(vw / CW, vh / CH) * 0.96;
+        s = Math.min(vw / CW, vh / CH) * 0.94;
         cx = CW / 2;
         cy = CH / 2;
       }
       const tx = vw / 2 - cx * s;
       const ty = vh / 2 - cy * s;
       wrap.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+    }
+
+    // ----- page intro flow -----
+    function cancelIntroSilent() {
+      introTimers.forEach(clearTimeout);
+      introTimers = [];
+      titleCard.classList.remove('visible');
+      titleCard.setAttribute('aria-hidden', 'true');
+      introState = null;
+    }
+
+    function skipIntro() {
+      if (introState === null) return false;
+      cancelIntroSilent();
+      applyTransform();
+      updateUI();
+      return true;
+    }
+
+    function startPageIntro(targetPanel) {
+      const m = meta(pageIdx);
+      cancelIntroSilent();
+      if (!m.panels || m.panels.length === 0) {
+        // no panels on this page — just show the full page, no card
+        panelIdx = 0; // sentinel; applyTransform falls back to full page
+        applyTransform();
+        updateUI();
+        return;
+      }
+      introTargetPanel = Math.max(0, Math.min(m.panels.length - 1, targetPanel));
+      panelIdx = introTargetPanel; // keep state coherent (mode = panel)
+      introState = 'page';
+      applyTransform(); // shows full page while introState != null
+      updateUI();
+
+      introTimers.push(setTimeout(() => {
+        if (introState === null) return; // skipped
+        introState = 'title';
+        el('tcPage').textContent = `Page ${pageIdx + 1} of ${manifest.pages.length}`;
+        el('tcTitle').textContent = m.title || '';
+        titleCard.classList.add('visible');
+        titleCard.setAttribute('aria-hidden', 'false');
+
+        introTimers.push(setTimeout(() => {
+          if (introState === null) return;
+          titleCard.classList.remove('visible');
+          titleCard.setAttribute('aria-hidden', 'true');
+
+          introTimers.push(setTimeout(() => {
+            if (introState === null) return;
+            introState = null;
+            applyTransform(); // settles to the target panel
+            updateUI();
+          }, INTRO_FADE_OUT));
+        }, INTRO_TITLE_HOLD));
+      }, INTRO_PAGE_HOLD));
     }
 
     function prefetchNeighbors() {
@@ -484,16 +631,21 @@
     }
 
     async function next() {
+      if (skipIntro()) return; // first tap during an intro just skips it
       const m = meta(pageIdx);
       if (panelIdx === -1) {
+        // page mode — simple page advance, no intro
         if (pageIdx < manifest.pages.length - 1) {
           pageIdx++;
-          await renderCurrent();
+          await mountPageCanvas();
+          applyTransform();
+          updateUI();
+          updateHash();
           prefetchNeighbors();
         }
         return;
       }
-      // panel mode
+      // panel mode — within page
       if (m.panels.length > 0 && panelIdx < m.panels.length - 1) {
         panelIdx++;
         applyTransform();
@@ -501,26 +653,30 @@
         updateHash();
         return;
       }
-      // advance to next page's first panel (or full page if no panels)
+      // panel mode — cross to next page (with intro)
       if (pageIdx < manifest.pages.length - 1) {
         pageIdx++;
-        const nm = meta(pageIdx);
-        panelIdx = nm.panels.length > 0 ? 0 : 0; // keep in panel mode; will fallback to full-page if 0 panels via applyTransform
-        if (nm.panels.length === 0) panelIdx = 0; // index past end; applyTransform treats this as full-page
-        await renderCurrent();
+        await mountPageCanvas();
+        updateHash();
         prefetchNeighbors();
+        startPageIntro(0);
       }
     }
 
     async function prev() {
+      if (skipIntro()) return;
       if (panelIdx === -1) {
         if (pageIdx > 0) {
           pageIdx--;
-          await renderCurrent();
+          await mountPageCanvas();
+          applyTransform();
+          updateUI();
+          updateHash();
           prefetchNeighbors();
         }
         return;
       }
+      // panel mode — within page
       if (panelIdx > 0) {
         panelIdx--;
         applyTransform();
@@ -528,43 +684,54 @@
         updateHash();
         return;
       }
+      // panel mode — cross to previous page (with intro, landing on last panel)
       if (pageIdx > 0) {
         pageIdx--;
-        const nm = meta(pageIdx);
-        panelIdx = nm.panels.length > 0 ? nm.panels.length - 1 : 0;
-        await renderCurrent();
+        await mountPageCanvas();
+        updateHash();
         prefetchNeighbors();
+        const pm = meta(pageIdx);
+        startPageIntro(Math.max(0, pm.panels.length - 1));
       }
     }
 
     async function setMode(mode) {
+      cancelIntroSilent();
       if (mode === 'page') {
         panelIdx = -1;
-      } else {
-        const m = meta(pageIdx);
-        if (m.panels.length > 0) {
-          panelIdx = 0;
-        } else {
-          // find next page with panels; else stay
-          let foundIdx = -1;
-          for (let i = pageIdx + 1; i < manifest.pages.length; i++) {
-            if (manifest.pages[i].panels.length > 0) { foundIdx = i; break; }
-          }
-          if (foundIdx === -1) {
-            // no panels anywhere; just keep cover with panel-toggle “active”
-            panelIdx = 0; // applyTransform falls back to full page
-          } else {
-            pageIdx = foundIdx;
-            panelIdx = 0;
-            await renderCurrent();
-            prefetchNeighbors();
-            return;
-          }
-        }
+        applyTransform();
+        updateUI();
+        updateHash();
+        return;
       }
-      applyTransform();
-      updateUI();
+      // panel mode
+      const m = meta(pageIdx);
+      if (m.panels.length > 0) {
+        // same page Page→Panel toggle: jump straight to panel 0, no intro
+        panelIdx = 0;
+        applyTransform();
+        updateUI();
+        updateHash();
+        return;
+      }
+      // current page has no panels (e.g. cover) — find next page with panels and play intro
+      let foundIdx = -1;
+      for (let i = pageIdx + 1; i < manifest.pages.length; i++) {
+        if (manifest.pages[i].panels.length > 0) { foundIdx = i; break; }
+      }
+      if (foundIdx === -1) {
+        // no panels anywhere
+        panelIdx = 0;
+        applyTransform();
+        updateUI();
+        updateHash();
+        return;
+      }
+      pageIdx = foundIdx;
+      await mountPageCanvas();
       updateHash();
+      prefetchNeighbors();
+      startPageIntro(0);
     }
 
     // ----- UI sync -----
@@ -572,9 +739,8 @@
       const m = meta(pageIdx);
       el('pageTitle').textContent = m.title || '';
       let ind = `Page ${pageIdx + 1} of ${manifest.pages.length}`;
-      if (panelIdx >= 0 && m.panels && m.panels.length > 0) {
-        const p = Math.min(panelIdx, m.panels.length - 1) + 1;
-        ind += `  ·  Panel ${p} of ${m.panels.length}`;
+      if (!introState && panelIdx >= 0 && m.panels && m.panels.length > 0 && panelIdx < m.panels.length) {
+        ind += `  ·  Panel ${panelIdx + 1} of ${m.panels.length}`;
       }
       el('indicator').textContent = ind;
       el('mode-page').classList.toggle('active', panelIdx === -1);
@@ -611,15 +777,39 @@
         } else if (e.key === 'c' || e.key === 'C') {
           setMode('panel');
         } else if (e.key === 'Home') {
-          pageIdx = 0; panelIdx = (panelIdx >= 0 ? 0 : -1);
-          renderCurrent().then(prefetchNeighbors);
+          (async () => {
+            cancelIntroSilent();
+            const wasPanelMode = panelIdx >= 0;
+            pageIdx = 0;
+            panelIdx = wasPanelMode ? 0 : -1;
+            await mountPageCanvas();
+            if (wasPanelMode && meta(pageIdx).panels.length > 0) {
+              startPageIntro(0);
+            } else {
+              applyTransform();
+              updateUI();
+            }
+            updateHash();
+            prefetchNeighbors();
+          })();
         } else if (e.key === 'End') {
-          pageIdx = manifest.pages.length - 1;
-          const lm = meta(pageIdx);
-          panelIdx = (panelIdx >= 0)
-            ? Math.max(0, lm.panels.length - 1)
-            : -1;
-          renderCurrent().then(prefetchNeighbors);
+          (async () => {
+            cancelIntroSilent();
+            const wasPanelMode = panelIdx >= 0;
+            pageIdx = manifest.pages.length - 1;
+            const lm = meta(pageIdx);
+            const lastPanel = Math.max(0, lm.panels.length - 1);
+            panelIdx = wasPanelMode ? lastPanel : -1;
+            await mountPageCanvas();
+            if (wasPanelMode && lm.panels.length > 0) {
+              startPageIntro(lastPanel);
+            } else {
+              applyTransform();
+              updateUI();
+            }
+            updateHash();
+            prefetchNeighbors();
+          })();
         }
       });
 
@@ -656,15 +846,26 @@
         const pn = hashParams.get('pn');
         const newPage = (!isNaN(p) && p >= 1 && p <= manifest.pages.length) ? p - 1 : 0;
         const newPanel = (pn === null) ? -1 : parseInt(pn, 10);
-        if (newPage !== pageIdx) {
-          pageIdx = newPage;
-          panelIdx = newPanel;
-          renderCurrent().then(prefetchNeighbors);
-        } else if (newPanel !== panelIdx) {
-          panelIdx = newPanel;
-          applyTransform();
-          updateUI();
-        }
+        (async () => {
+          if (newPage !== pageIdx) {
+            cancelIntroSilent();
+            pageIdx = newPage;
+            panelIdx = newPanel;
+            await mountPageCanvas();
+            if (newPanel >= 0 && meta(pageIdx).panels.length > 0) {
+              startPageIntro(newPanel);
+            } else {
+              applyTransform();
+              updateUI();
+            }
+            prefetchNeighbors();
+          } else if (newPanel !== panelIdx) {
+            skipIntro();
+            panelIdx = newPanel;
+            applyTransform();
+            updateUI();
+          }
+        })();
       });
     }
 
