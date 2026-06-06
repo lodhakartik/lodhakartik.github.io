@@ -295,6 +295,23 @@
       </div>
     </section>
 
+    <section>
+      <h2 class="section-title">Jain Comics</h2>
+      <div class="games">
+
+        <article class="game-card">
+          <div class="game-emblem" aria-hidden="true">&#x1F4D6;</div>
+          <h3 class="game-name">The Guru Pushya Yog</h3>
+          <p class="game-desc">A Jain values comic &mdash; on the most auspicious day of gold-buying, Mahendra learns what true gold really is. Read page by page, then panel by panel.</p>
+          <div class="game-meta">
+            <span class="play-count-badge" id="count-comic-guru-pushya-yog">&#x1F338; &#x2026;</span>
+          </div>
+          <a class="play-button" href="./comics/reader.html?id=guru-pushya-yog">Read &#x2192;</a>
+        </article>
+
+      </div>
+    </section>
+
     <section class="visitor-globe">
       <h2 class="section-title">&#x1F30D; Visitors</h2>
       <div class="globe-host">
@@ -332,7 +349,7 @@
     // Game play count (read-only). If the count API is blocked (e.g. by an
     // ad-blocker), hide the badge entirely rather than show a misleading
     // "a new game" label.
-    async function showPlayCount(elementId, counterName) {
+    async function showPlayCount(elementId, counterName, noun = "plays") {
       const el = document.getElementById(elementId);
       if (!el) return;
       const n = await fetchCount(counterName);
@@ -341,10 +358,11 @@
         return;
       }
       el.hidden = false;
-      el.textContent = `\u{1F338} ${n.toLocaleString()} plays`;
+      el.textContent = `\u{1F338} ${n.toLocaleString()} ${noun}`;
     }
 
     showPlayCount("count-navkar-arrange", "navkar-arrange");
+    showPlayCount("count-comic-guru-pushya-yog", "comic-guru-pushya-yog", "reads");
 
     /* Hidden for now — restore alongside the matching game cards above.
     showPlayCount("count-jain-gyan-chaupar", "jain-gyan-chaupar");
