@@ -695,31 +695,21 @@
       // panel mode
       const m = meta(pageIdx);
       if (m.panels.length > 0) {
-        // same page Page→Panel toggle: jump straight to panel 0, no intro
+        // same-page Page→Panel toggle: jump straight to panel 0, no intro
         panelIdx = 0;
         applyTransform();
         updateUI();
         updateHash();
         return;
       }
-      // current page has no panels (e.g. cover) — find next page with panels and play intro
-      let foundIdx = -1;
-      for (let i = pageIdx + 1; i < manifest.pages.length; i++) {
-        if (manifest.pages[i].panels.length > 0) { foundIdx = i; break; }
-      }
-      if (foundIdx === -1) {
-        // no panels anywhere
-        panelIdx = 0;
-        applyTransform();
-        updateUI();
-        updateHash();
-        return;
-      }
-      pageIdx = foundIdx;
-      await mountPageCanvas();
+      // current page has no panels (cover or any panel-less page) — stay here
+      // and show full page. applyTransform falls back to full-page render because
+      // panels[0] is undefined. Next falls through in next() to play the intro
+      // on the following page.
+      panelIdx = 0;
+      applyTransform();
+      updateUI();
       updateHash();
-      prefetchNeighbors();
-      startPageIntro(0);
     }
 
     // ----- UI sync -----
