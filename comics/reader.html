@@ -324,7 +324,7 @@
 
     // intro timings (ms) — the wrap transition itself is 620 ms (CSS)
     const INTRO_PAGE_HOLD  = 1100; // full page held before zooming into the title strip
-    const INTRO_TITLE_HOLD = 1500; // title strip held before zooming into the first panel
+    // title -> panel 1 is no longer auto-advanced; the reader must press next/swipe.
 
     // page header strip rect — derived per-page from the first panel's y so it stays
     // accurate even when a page has a different aspect ratio (e.g. "The Crowd").
@@ -550,14 +550,8 @@
       introTimers.push(setTimeout(() => {
         if (introState === null) return; // skipped
         introState = 'title';
-        applyTransform(); // zoom into header strip
-
-        introTimers.push(setTimeout(() => {
-          if (introState === null) return;
-          introState = null;
-          applyTransform(); // settles to the target panel
-          updateUI();
-        }, INTRO_TITLE_HOLD));
+        applyTransform(); // zoom into header strip and hold until the reader advances
+        updateUI();
       }, INTRO_PAGE_HOLD));
     }
 
@@ -582,7 +576,22 @@
     }
 
     async function next() {
-      if (skipIntro()) return; // first tap during an intro just skips it
+      // intro 'page' phase → step to the title stop
+      if (introState === 'page') {
+        cancelIntroSilent();
+        introState = 'title';
+        applyTransform();
+        updateUI();
+        return;
+      }
+      // intro 'title' phase → reveal first real panel (panelIdx already preset)
+      if (introState === 'title') {
+        cancelIntroSilent();
+        applyTransform();
+        updateUI();
+        updateHash();
+        return;
+      }
       const m = meta(pageIdx);
       if (panelIdx === -1) {
         // page mode — simple page advance, no intro
@@ -615,7 +624,24 @@
     }
 
     async function prev() {
-      if (skipIntro()) return;
+      // intro 'page' or 'title' phase → step out of this page's intro backwards
+      if (introState === 'page' || introState === 'title') {
+        cancelIntroSilent();
+        if (pageIdx > 0) {
+          pageIdx--;
+          await mountPageCanvas();
+          const pm = meta(pageIdx);
+          panelIdx = Math.max(0, pm.panels.length - 1);
+          applyTransform();
+          updateUI();
+          updateHash();
+          prefetchNeighbors();
+        } else {
+          applyTransform();
+          updateUI();
+        }
+        return;
+      }
       if (panelIdx === -1) {
         if (pageIdx > 0) {
           pageIdx--;
@@ -635,14 +661,25 @@
         updateHash();
         return;
       }
-      // panel mode — cross to previous page (with intro, landing on last panel)
+      // panel mode — at first panel: back to the title stop of the same page
+      const m = meta(pageIdx);
+      if (panelIdx === 0 && m.panels && m.panels.length > 0) {
+        introState = 'title';
+        applyTransform();
+        updateUI();
+        updateHash();
+        return;
+      }
+      // fallback: no panels on current page → cross to previous page (last panel, no intro)
       if (pageIdx > 0) {
         pageIdx--;
         await mountPageCanvas();
+        const pm = meta(pageIdx);
+        panelIdx = Math.max(0, pm.panels.length - 1);
+        applyTransform();
+        updateUI();
         updateHash();
         prefetchNeighbors();
-        const pm = meta(pageIdx);
-        startPageIntro(Math.max(0, pm.panels.length - 1));
       }
     }
 
@@ -689,8 +726,14 @@
     function updateUI() {
       const m = meta(pageIdx);
       el('pageTitle').textContent = m.title || '';
-      let ind = `Page ${pageIdx + 1} of ${manifest.pages.length}`;
-      if (!introState && panelIdx >= 0 && m.panels && m.panels.length > 0 && panelIdx < m.panels.length) {
+      const coverPdfPage = manifest.cover && manifest.cover.pdfPage;
+      const isCover = m.pdfPage === coverPdfPage;
+      const contentCount = manifest.pages.filter(p => p.pdfPage !== coverPdfPage).length;
+      const printedNumber = isCover ? 0 : pageIdx;
+      let ind = isCover ? 'Cover' : `Page ${printedNumber} of ${contentCount}`;
+      if (introState === 'title') {
+        ind += `  ·  Title`;
+      } else if (!introState && panelIdx >= 0 && m.panels && m.panels.length > 0 && panelIdx < m.panels.length) {
         ind += `  ·  Panel ${panelIdx + 1} of ${m.panels.length}`;
       }
       el('indicator').textContent = ind;
