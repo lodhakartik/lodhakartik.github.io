@@ -131,47 +131,6 @@
       background: #fff;
     }
     .wrap.no-anim { transition: none !important; }
-
-    /* page intro: title card */
-    .title-card {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      z-index: 8;
-      opacity: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, rgba(58,31,14,0.55) 0%, rgba(58,31,14,0.86) 100%);
-      transition: opacity 520ms ease;
-      padding: 24px;
-    }
-    .title-card.visible { opacity: 1; }
-    .title-card-inner {
-      text-align: center;
-      transform: translateY(14px) scale(0.97);
-      transition: transform 620ms cubic-bezier(0.2, 0.7, 0.3, 1);
-    }
-    .title-card.visible .title-card-inner { transform: none; }
-    .title-card-eyebrow {
-      font-family: "Caveat", cursive;
-      font-weight: 700;
-      font-size: 26px;
-      color: var(--gold);
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-      opacity: 0.9;
-    }
-    .title-card-text {
-      font-family: "Caveat", cursive;
-      font-weight: 700;
-      font-size: 60px;
-      color: #FFF8E7;
-      line-height: 1.1;
-      text-shadow: 0 4px 22px rgba(0,0,0,0.55);
-      max-width: 90vw;
-      margin: 0 auto;
-    }
     .wrap canvas {
       display: block;
       width: 100%;
@@ -297,8 +256,6 @@
       .nav-prev { left: 8px; }
       .nav-next { right: 8px; }
       .indicator, .page-title { font-size: 17px; }
-      .title-card-eyebrow { font-size: 20px; letter-spacing: 1.1px; margin-bottom: 8px; }
-      .title-card-text { font-size: 40px; }
     }
   </style>
 </head>
@@ -319,12 +276,6 @@
   <main class="stage">
     <div class="frame" id="frame">
       <div class="wrap" id="wrap"></div>
-      <div class="title-card" id="titleCard" aria-hidden="true">
-        <div class="title-card-inner">
-          <div class="title-card-eyebrow" id="tcPage"></div>
-          <div class="title-card-text" id="tcTitle"></div>
-        </div>
-      </div>
     </div>
 
     <button class="nav-btn nav-prev" id="prevBtn" aria-label="Previous" disabled>&#x2039;</button>
@@ -366,15 +317,21 @@
     const inflight = new Map();     // pdfPageNum -> Promise<canvas>
 
     // intro flow for entering a new page in panel mode
-    // states: null (no intro), 'page' (showing full page), 'title' (title card visible)
+    // states: null (no intro), 'page' (showing full page), 'title' (zoomed on header strip)
     let introState = null;
     let introTargetPanel = 0;
     let introTimers = [];
 
-    // intro timings (ms)
-    const INTRO_PAGE_HOLD   = 1300;  // full page visible before the title card
-    const INTRO_TITLE_HOLD  = 1700;  // how long the title card stays on screen
-    const INTRO_FADE_OUT    = 560;   // wait for title-card fade before settling
+    // intro timings (ms) — the wrap transition itself is 620 ms (CSS)
+    const INTRO_PAGE_HOLD  = 1100; // full page held before zooming into the title strip
+    const INTRO_TITLE_HOLD = 1500; // title strip held before zooming into the first panel
+
+    // page header strip rect — derived per-page from the first panel's y so it stays
+    // accurate even when a page has a different aspect ratio (e.g. "The Crowd").
+    function headerRectFor(page) {
+      const firstY = (page.panels && page.panels[0]) ? page.panels[0].y : 0.065;
+      return { x: 0.005, y: 0.0, w: 0.99, h: Math.max(0.045, firstY - 0.005) };
+    }
 
     // ----- elements -----
     const el = (id) => document.getElementById(id);
@@ -383,7 +340,6 @@
     const loadingOverlay = el('loadingOverlay');
     const errorOverlay = el('errorOverlay');
     const progressBar = el('progressBar');
-    const titleCard = el('titleCard');
 
     // ----- init -----
     function whenPdfJsReady() {
@@ -527,13 +483,18 @@
         return;
       }
       const m = meta(pageIdx);
-      const inIntro = introState !== null;
-      const showPanel = !inIntro && panelIdx >= 0 && m.panels && m.panels[panelIdx];
       let s, cx, cy;
-      if (showPanel) {
+      if (introState === 'title') {
+        // zoom into the page header strip (PAGE N · title)
+        const r = headerRectFor(m);
+        const pw = r.w * CW, ph = r.h * CH;
+        s = Math.min(vw / pw, vh / ph) * 0.92;
+        cx = (r.x + r.w / 2) * CW;
+        cy = (r.y + r.h / 2) * CH;
+      } else if (introState === null && panelIdx >= 0 && m.panels && m.panels[panelIdx]) {
         const r = m.panels[panelIdx];
-        // expand the panel rect with a small margin so text near the edge isn't clipped
-        const MX = 0.018, MY = 0.012;
+        // small bleed margin around the panel rect for breathing room
+        const MX = 0.015, MY = 0.010;
         const x0 = Math.max(0, r.x - MX);
         const y0 = Math.max(0, r.y - MY);
         const x1 = Math.min(1, r.x + r.w + MX);
@@ -545,6 +506,7 @@
         cx = (x0 + ew / 2) * CW;
         cy = (y0 + eh / 2) * CH;
       } else {
+        // full page (intro 'page' phase, page mode, or no-panel page)
         s = Math.min(vw / CW, vh / CH) * 0.94;
         cx = CW / 2;
         cy = CH / 2;
@@ -558,8 +520,6 @@
     function cancelIntroSilent() {
       introTimers.forEach(clearTimeout);
       introTimers = [];
-      titleCard.classList.remove('visible');
-      titleCard.setAttribute('aria-hidden', 'true');
       introState = null;
     }
 
@@ -575,7 +535,7 @@
       const m = meta(pageIdx);
       cancelIntroSilent();
       if (!m.panels || m.panels.length === 0) {
-        // no panels on this page — just show the full page, no card
+        // no panels on this page — just show the full page
         panelIdx = 0; // sentinel; applyTransform falls back to full page
         applyTransform();
         updateUI();
@@ -584,28 +544,19 @@
       introTargetPanel = Math.max(0, Math.min(m.panels.length - 1, targetPanel));
       panelIdx = introTargetPanel; // keep state coherent (mode = panel)
       introState = 'page';
-      applyTransform(); // shows full page while introState != null
+      applyTransform(); // full page (introState !== null)
       updateUI();
 
       introTimers.push(setTimeout(() => {
         if (introState === null) return; // skipped
         introState = 'title';
-        el('tcPage').textContent = `Page ${pageIdx + 1} of ${manifest.pages.length}`;
-        el('tcTitle').textContent = m.title || '';
-        titleCard.classList.add('visible');
-        titleCard.setAttribute('aria-hidden', 'false');
+        applyTransform(); // zoom into header strip
 
         introTimers.push(setTimeout(() => {
           if (introState === null) return;
-          titleCard.classList.remove('visible');
-          titleCard.setAttribute('aria-hidden', 'true');
-
-          introTimers.push(setTimeout(() => {
-            if (introState === null) return;
-            introState = null;
-            applyTransform(); // settles to the target panel
-            updateUI();
-          }, INTRO_FADE_OUT));
+          introState = null;
+          applyTransform(); // settles to the target panel
+          updateUI();
         }, INTRO_TITLE_HOLD));
       }, INTRO_PAGE_HOLD));
     }
