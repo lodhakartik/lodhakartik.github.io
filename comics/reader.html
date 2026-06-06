@@ -321,10 +321,7 @@
     let introState = null;
     let introTargetPanel = 0;
     let introTimers = [];
-
-    // intro timings (ms) — the wrap transition itself is 620 ms (CSS)
-    const INTRO_PAGE_HOLD  = 1100; // full page held before zooming into the title strip
-    // title -> panel 1 is no longer auto-advanced; the reader must press next/swipe.
+    // Intro phases (page -> title -> panel) are all reader-driven via next/prev now.
 
     // page header strip rect — derived per-page from the first panel's y so it stays
     // accurate even when a page has a different aspect ratio (e.g. "The Crowd").
@@ -544,15 +541,8 @@
       introTargetPanel = Math.max(0, Math.min(m.panels.length - 1, targetPanel));
       panelIdx = introTargetPanel; // keep state coherent (mode = panel)
       introState = 'page';
-      applyTransform(); // full page (introState !== null)
+      applyTransform(); // full page (introState !== null) — holds until Next
       updateUI();
-
-      introTimers.push(setTimeout(() => {
-        if (introState === null) return; // skipped
-        introState = 'title';
-        applyTransform(); // zoom into header strip and hold until the reader advances
-        updateUI();
-      }, INTRO_PAGE_HOLD));
     }
 
     function prefetchNeighbors() {
