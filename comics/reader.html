@@ -119,6 +119,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
+      touch-action: none;
     }
     .wrap {
       position: absolute;
@@ -131,6 +132,7 @@
       background: #fff;
     }
     .wrap.no-anim { transition: none !important; }
+    .wrap.user-anim { transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1); }
     .wrap canvas {
       display: block;
       width: 100%;
@@ -251,11 +253,18 @@
       .title-block h1 { font-size: 20px; }
       .title-block p { display: none; }
       .back { font-size: 18px; padding: 4px 8px; }
-      .mode-btn { font-size: 16px; padding: 3px 10px; }
-      .nav-btn { width: 40px; height: 40px; font-size: 24px; }
+      .mode-btn { font-size: 17px; padding: 6px 14px; }
+      .nav-btn { width: 44px; height: 44px; font-size: 26px; }
       .nav-prev { left: 8px; }
       .nav-next { right: 8px; }
       .indicator, .page-title { font-size: 17px; }
+      .bottombar { gap: 6px 12px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+      .page-title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+    @media (max-width: 380px) {
+      .topbar { padding: 6px 10px; }
+      .title-block h1 { font-size: 18px; }
+      .mode-btn { font-size: 16px; padding: 5px 12px; }
     }
   </style>
 </head>
@@ -309,12 +318,29 @@
     const comicId = params.get('id') || 'guru-pushya-yog';
     const RENDER_TARGET_WIDTH = 2200; // px — render canvas at this width for crisp zoom
 
+    // gesture / user-zoom tuning
+    const USER_SCALE_MIN = 1.0;     // never below the fitted base view
+    const USER_SCALE_MAX = 5.0;     // 5x on top of base — readable on phones
+    const DOUBLE_TAP_MS = 320;
+    const DOUBLE_TAP_DIST = 28;
+    const DOUBLE_TAP_ZOOM = 2.4;
+    const SWIPE_MIN_DX = 50;
+    const SWIPE_MAX_MS = 600;
+    const SWIPE_RATIO = 1.4;
+    const TAP_MAX_MS = 250;
+    const TAP_MAX_MOVE = 10;
+
     let manifest = null;
     let pdf = null;
     let pageIdx = 0;            // 0-based index into manifest.pages
     let panelIdx = -1;          // -1 = full-page view, else panel index
     const renderCache = new Map();  // pdfPageNum -> canvas
     const inflight = new Map();     // pdfPageNum -> Promise<canvas>
+
+    // base transform from applyTransform() (fit current view) and a user-driven
+    // zoom/pan layered on top from pinch/double-tap gestures.
+    let baseS = 1, baseTx = 0, baseTy = 0;
+    let userS = 1, userTx = 0, userTy = 0;
 
     // intro flow for entering a new page in panel mode
     // states: null (no intro), 'page' (showing full page), 'title' (zoomed on header strip)
@@ -508,9 +534,52 @@
         cx = CW / 2;
         cy = CH / 2;
       }
-      const tx = vw / 2 - cx * s;
-      const ty = vh / 2 - cy * s;
-      wrap.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+      baseS = s;
+      baseTx = vw / 2 - cx * s;
+      baseTy = vh / 2 - cy * s;
+      commitTransform();
+    }
+
+    function commitTransform() {
+      const fs = baseS * userS;
+      const fx = userTx + baseTx * userS;
+      const fy = userTy + baseTy * userS;
+      wrap.style.transform = `translate(${fx}px, ${fy}px) scale(${fs})`;
+    }
+
+    function resetUserTransform() {
+      userS = 1; userTx = 0; userTy = 0;
+    }
+
+    // Keep at least MIN px of canvas visible on every side once the user has
+    // zoomed in. Operates in screen-pixel space, then converts back to the
+    // user-transform vars so commitTransform() picks it up.
+    function clampUserPan() {
+      if (userS <= 1.001) return;
+      const canvas = wrap.firstChild;
+      if (!canvas) return;
+      const fs = baseS * userS;
+      let fx = baseTx * userS + userTx;
+      let fy = baseTy * userS + userTy;
+      const CW = canvas.width, CH = canvas.height;
+      const vw = frame.clientWidth, vh = frame.clientHeight;
+      const MIN = 40;
+      if (CW * fs >= vw) {
+        fx = Math.min(fx, 0);
+        fx = Math.max(fx, vw - CW * fs);
+      } else {
+        fx = Math.max(fx, MIN - CW * fs);
+        fx = Math.min(fx, vw - MIN);
+      }
+      if (CH * fs >= vh) {
+        fy = Math.min(fy, 0);
+        fy = Math.max(fy, vh - CH * fs);
+      } else {
+        fy = Math.max(fy, MIN - CH * fs);
+        fy = Math.min(fy, vh - MIN);
+      }
+      userTx = fx - baseTx * userS;
+      userTy = fy - baseTy * userS;
     }
 
     // ----- page intro flow -----
@@ -531,6 +600,7 @@
     function startPageIntro(targetPanel) {
       const m = meta(pageIdx);
       cancelIntroSilent();
+      resetUserTransform();
       if (!m.panels || m.panels.length === 0) {
         // no panels on this page — just show the full page
         panelIdx = 0; // sentinel; applyTransform falls back to full page
@@ -566,6 +636,7 @@
     }
 
     async function next() {
+      resetUserTransform();
       // intro 'page' phase → step to the title stop
       if (introState === 'page') {
         cancelIntroSilent();
@@ -614,6 +685,7 @@
     }
 
     async function prev() {
+      resetUserTransform();
       // intro 'page' or 'title' phase → step out of this page's intro backwards
       if (introState === 'page' || introState === 'title') {
         cancelIntroSilent();
@@ -675,6 +747,7 @@
 
     async function setMode(mode) {
       cancelIntroSilent();
+      resetUserTransform();
       if (mode === 'page') {
         panelIdx = -1;
         applyTransform();
@@ -753,6 +826,7 @@
         } else if (e.key === 'Home') {
           (async () => {
             cancelIntroSilent();
+            resetUserTransform();
             const wasPanelMode = panelIdx >= 0;
             pageIdx = 0;
             panelIdx = wasPanelMode ? 0 : -1;
@@ -769,6 +843,7 @@
         } else if (e.key === 'End') {
           (async () => {
             cancelIntroSilent();
+            resetUserTransform();
             const wasPanelMode = panelIdx >= 0;
             pageIdx = manifest.pages.length - 1;
             const lm = meta(pageIdx);
@@ -787,32 +862,180 @@
         }
       });
 
-      window.addEventListener('resize', () => applyTransform());
+      window.addEventListener('resize', () => {
+        resetUserTransform();
+        applyTransform();
+      });
 
-      // swipe navigation
-      let sx = null, sy = null, st = 0;
-      frame.addEventListener('touchstart', (e) => {
-        if (e.touches.length !== 1) { sx = null; return; }
-        sx = e.touches[0].clientX;
-        sy = e.touches[0].clientY;
-        st = Date.now();
-      }, { passive: true });
-      frame.addEventListener('touchend', (e) => {
-        if (sx === null) return;
-        const t = e.changedTouches[0];
-        const dx = t.clientX - sx;
-        const dy = t.clientY - sy;
-        const dt = Date.now() - st;
-        if (dt < 600 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-          if (dx < 0) next(); else prev();
+      // pointer-event gesture handler: pinch zoom, single-finger pan when zoomed,
+      // double-tap to toggle zoom, swipe at baseline. Active touch points live in
+      // the `pointers` map; `gesture` tracks the current interpretation.
+      const pointers = new Map();
+      let gesture = 'none'; // 'none' | 'maybe-swipe' | 'pan' | 'pinch'
+      let startPinch = null; // { cx, cy, dist, userS, userTx, userTy }
+      let startPan = null;   // { cx, cy, userTx, userTy }
+      let startTap = null;   // { x, y, t } — for tap/swipe decision on release
+      let lastTap = null;    // { x, y, t } — for double-tap detection
+      let snapTimer = null;
+
+      function centroid() {
+        let cx = 0, cy = 0, n = 0;
+        for (const p of pointers.values()) { cx += p.x; cy += p.y; n++; }
+        return n ? { x: cx / n, y: cy / n } : { x: 0, y: 0 };
+      }
+      function pinchDist() {
+        if (pointers.size < 2) return 0;
+        const arr = [...pointers.values()];
+        return Math.hypot(arr[0].x - arr[1].x, arr[0].y - arr[1].y);
+      }
+
+      function setLiveAnim(on) {
+        if (on) {
+          wrap.classList.add('no-anim');
+          wrap.classList.remove('user-anim');
+        } else {
+          wrap.classList.remove('no-anim');
         }
-        sx = sy = null;
+      }
+
+      function animateSnap() {
+        wrap.classList.remove('no-anim');
+        wrap.classList.add('user-anim');
+        commitTransform();
+        if (snapTimer) clearTimeout(snapTimer);
+        snapTimer = setTimeout(() => {
+          wrap.classList.remove('user-anim');
+          snapTimer = null;
+        }, 340);
+      }
+
+      function doubleTapZoom(x, y) {
+        if (userS > 1.05) {
+          resetUserTransform();
+        } else {
+          const k = DOUBLE_TAP_ZOOM;
+          userS = k;
+          userTx = x * (1 - k);
+          userTy = y * (1 - k);
+          clampUserPan();
+        }
+        animateSnap();
+      }
+
+      frame.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        try { frame.setPointerCapture(e.pointerId); } catch {}
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 1) {
+          gesture = 'maybe-swipe';
+          startTap = { x: e.clientX, y: e.clientY, t: Date.now() };
+          setLiveAnim(true);
+        } else if (pointers.size === 2) {
+          startTap = null;
+          gesture = 'pinch';
+          const c = centroid();
+          startPinch = { cx: c.x, cy: c.y, dist: pinchDist(), userS, userTx, userTy };
+          setLiveAnim(true);
+        }
       });
 
-      // double-click on stage toggles modes
-      frame.addEventListener('dblclick', () => {
-        setMode(panelIdx === -1 ? 'panel' : 'page');
-      });
+      frame.addEventListener('pointermove', (e) => {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (gesture === 'maybe-swipe' && userS > 1.001) {
+          // promote to pan once we know the user is zoomed in
+          gesture = 'pan';
+          startPan = { cx: startTap.x, cy: startTap.y, userTx, userTy };
+        }
+
+        if (gesture === 'pan') {
+          e.preventDefault();
+          userTx = startPan.userTx + (e.clientX - startPan.cx);
+          userTy = startPan.userTy + (e.clientY - startPan.cy);
+          clampUserPan();
+          commitTransform();
+        } else if (gesture === 'pinch' && pointers.size >= 2) {
+          e.preventDefault();
+          const c = centroid();
+          const d = pinchDist();
+          if (!startPinch.dist) return;
+          const k = d / startPinch.dist;
+          const newUserS = Math.max(USER_SCALE_MIN, Math.min(USER_SCALE_MAX, startPinch.userS * k));
+          const kEff = newUserS / startPinch.userS;
+          userS = newUserS;
+          userTx = c.x - kEff * (startPinch.cx - startPinch.userTx);
+          userTy = c.y - kEff * (startPinch.cy - startPinch.userTy);
+          clampUserPan();
+          commitTransform();
+        }
+      }, { passive: false });
+
+      function endPointer(e) {
+        if (!pointers.has(e.pointerId)) return;
+        const wasGesture = gesture;
+        const ex = e.clientX, ey = e.clientY;
+        pointers.delete(e.pointerId);
+        try { frame.releasePointerCapture(e.pointerId); } catch {}
+
+        // pinch ending with one finger still down → continue as pan
+        if (wasGesture === 'pinch' && pointers.size === 1) {
+          const remaining = [...pointers.values()][0];
+          gesture = 'pan';
+          startPan = { cx: remaining.x, cy: remaining.y, userTx, userTy };
+          return;
+        }
+        if (pointers.size > 0) return;
+
+        if (wasGesture === 'maybe-swipe' && startTap) {
+          const dx = ex - startTap.x;
+          const dy = ey - startTap.y;
+          const dt = Date.now() - startTap.t;
+          const isTap = dt < TAP_MAX_MS && Math.abs(dx) < TAP_MAX_MOVE && Math.abs(dy) < TAP_MAX_MOVE;
+          const isMouse = e.pointerType === 'mouse';
+          if (isTap) {
+            const now = Date.now();
+            if (lastTap && now - lastTap.t < DOUBLE_TAP_MS
+                && Math.hypot(ex - lastTap.x, ey - lastTap.y) < DOUBLE_TAP_DIST) {
+              lastTap = null;
+              if (isMouse) {
+                setLiveAnim(false);
+                setMode(panelIdx === -1 ? 'panel' : 'page');
+              } else {
+                doubleTapZoom(ex, ey);
+              }
+            } else {
+              lastTap = { x: ex, y: ey, t: now };
+              setLiveAnim(false);
+            }
+          } else if (!isMouse && userS < 1.01 && dt < SWIPE_MAX_MS
+                     && Math.abs(dx) > SWIPE_MIN_DX
+                     && Math.abs(dx) > Math.abs(dy) * SWIPE_RATIO) {
+            lastTap = null;
+            setLiveAnim(false);
+            if (dx < 0) next(); else prev();
+          } else {
+            setLiveAnim(false);
+          }
+        } else if (wasGesture === 'pinch' || wasGesture === 'pan') {
+          if (userS < 1.01) {
+            resetUserTransform();
+            animateSnap();
+          } else {
+            setLiveAnim(false);
+          }
+        } else {
+          setLiveAnim(false);
+        }
+
+        gesture = 'none';
+        startPan = null;
+        startPinch = null;
+        startTap = null;
+      }
+
+      frame.addEventListener('pointerup', endPointer);
+      frame.addEventListener('pointercancel', endPointer);
 
       window.addEventListener('hashchange', () => {
         const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
@@ -823,6 +1046,7 @@
         (async () => {
           if (newPage !== pageIdx) {
             cancelIntroSilent();
+            resetUserTransform();
             pageIdx = newPage;
             panelIdx = newPanel;
             await mountPageCanvas();
@@ -835,6 +1059,7 @@
             prefetchNeighbors();
           } else if (newPanel !== panelIdx) {
             skipIntro();
+            resetUserTransform();
             panelIdx = newPanel;
             applyTransform();
             updateUI();
