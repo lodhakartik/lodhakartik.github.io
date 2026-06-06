@@ -116,6 +116,33 @@
       text-align: center;
       margin-bottom: 4px;
     }
+    .comic-thumb {
+      aspect-ratio: 2 / 3;
+      width: 100%;
+      max-width: 220px;
+      margin: 0 auto 4px;
+      background: #1c0e07;
+      border: 1.5px solid var(--gold);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+    }
+    .comic-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .game-series {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--gold-deep);
+      letter-spacing: 0.6px;
+      margin: 0;
+      text-align: center;
+      text-transform: uppercase;
+    }
     .game-name {
       font-family: "Caveat", cursive;
       font-weight: 700;
@@ -124,12 +151,33 @@
       margin: 0;
       text-align: center;
     }
+    .game-subtitle {
+      font-family: "Caveat", cursive;
+      font-weight: 500;
+      font-size: 20px;
+      color: var(--ink-soft);
+      margin: -8px 0 0;
+      text-align: center;
+      font-style: italic;
+      opacity: 0.9;
+    }
     .game-desc {
       font-size: 17px;
       color: var(--ink-soft);
       margin: 0;
       text-align: center;
       flex: 1;
+    }
+    .tag-chip {
+      display: inline-block;
+      padding: 3px 12px;
+      font-family: "Patrick Hand", cursive;
+      font-size: 14px;
+      color: var(--gold-deep);
+      background: rgba(255, 248, 225, 0.7);
+      border: 1.5px solid var(--gold);
+      border-radius: 999px;
+      letter-spacing: 0.3px;
     }
     .game-meta {
       display: flex;
@@ -300,10 +348,16 @@
       <div class="games">
 
         <article class="game-card">
-          <div class="game-emblem" aria-hidden="true">&#x1F4D6;</div>
+          <a class="comic-thumb" href="./comics/reader.html?id=guru-pushya-yog" aria-label="Read The Guru Pushya Yog">
+            <img src="./comics/guru-pushya-yog/cover.jpg" alt="The Guru Pushya Yog &mdash; cover" loading="lazy" />
+          </a>
+          <p class="game-series">Jain Values Comic Series</p>
           <h3 class="game-name">The Guru Pushya Yog</h3>
-          <p class="game-desc">A Jain values comic &mdash; on the most auspicious day of gold-buying, Mahendra learns what true gold really is. Read page by page, then panel by panel.</p>
+          <p class="game-subtitle">The True Gold</p>
+          <p class="game-desc">On the most auspicious day of gold-buying, Mahendra discovers that not every gold is kept in a vault. Some shine when you let go.</p>
           <div class="game-meta">
+            <span class="tag-chip">&#x1F4D6; 9 pages</span>
+            <span class="tag-chip">Hinglish</span>
             <span class="play-count-badge" id="count-comic-guru-pushya-yog">&#x1F338; &#x2026;</span>
           </div>
           <a class="play-button" href="./comics/reader.html?id=guru-pushya-yog">Read &#x2192;</a>

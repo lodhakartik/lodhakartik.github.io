@@ -228,12 +228,29 @@
           <div class="comic-meta">
             <span class="chip">&#x1F4D6; 9 pages</span>
             <span class="chip">Hinglish</span>
+            <span class="chip" id="count-comic-guru-pushya-yog" hidden>&#x1F338; &#x2026;</span>
           </div>
           <a class="read-button" href="./reader.html?id=guru-pushya-yog">Read &#x2192;</a>
         </div>
       </article>
 
     </section>
+
+    <script>
+      (async () => {
+        const el = document.getElementById('count-comic-guru-pushya-yog');
+        if (!el) return;
+        try {
+          const res = await fetch('https://api.counterapi.dev/v1/lodhakartik/comic-guru-pushya-yog/', { cache: 'no-store' });
+          if (!res.ok) return;
+          const data = await res.json();
+          const n = Number(data && data.count);
+          if (!Number.isFinite(n)) return;
+          el.hidden = false;
+          el.textContent = `\u{1F338} ${n.toLocaleString()} reads`;
+        } catch {}
+      })();
+    </script>
 
     <footer>
       <p class="copyline">&copy; 2026 Kartik Lodha &middot; <a href="../">lodhakartik.github.io</a></p>
