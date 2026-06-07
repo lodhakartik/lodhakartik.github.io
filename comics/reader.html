@@ -439,6 +439,7 @@
         pdf = await loadingTask.promise;
 
         // restore state from hash
+        let hashHasPn = false;
         const hashStr = location.hash.replace(/^#/, '');
         if (hashStr) {
           const hashParams = new URLSearchParams(hashStr);
@@ -447,14 +448,20 @@
           const pnRaw = hashParams.get('pn');
           if (pnRaw !== null) {
             const pn = parseInt(pnRaw, 10);
-            if (!isNaN(pn)) panelIdx = pn;
+            if (!isNaN(pn)) { panelIdx = pn; hashHasPn = true; }
           }
         }
 
         loadingOverlay.hidden = true;
         await mountPageCanvas();
-        const initialIntro = (panelIdx >= 0 && meta(pageIdx).panels.length > 0);
-        if (initialIntro) {
+        // Deep links with an explicit pn= jump straight to the panel + spotlight.
+        // The page→title intro only plays when crossing pages via Next during reading.
+        const hasPanels = panelIdx >= 0 && meta(pageIdx).panels.length > 0;
+        if (hasPanels && hashHasPn) {
+          panelIdx = Math.max(0, Math.min(meta(pageIdx).panels.length - 1, panelIdx));
+          applyTransform();
+          updateUI();
+        } else if (hasPanels) {
           startPageIntro(panelIdx);
         } else {
           applyTransform();
