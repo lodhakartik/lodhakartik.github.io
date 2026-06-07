@@ -1,0 +1,18 @@
+{
+  "id": "devradigani-adhyay-1",
+  "title": "Devradigani Kshamashraman",
+  "subtitle": "Adhyay 1",
+  "series": "Jain Story Comic Series",
+  "author": "Kartik Lodha",
+  "language": "Hinglish",
+  "pdf": "comic.pdf",
+  "cover": { "pdfPage": 1 },
+  "pages": [
+    { "pdfPage": 1, "title": "Cover",  "panels": [] },
+    { "pdfPage": 2, "title": "Page 2", "panels": [] },
+    { "pdfPage": 3, "title": "Page 3", "panels": [] },
+    { "pdfPage": 4, "title": "Page 4", "panels": [] },
+    { "pdfPage": 5, "title": "Page 5", "panels": [] },
+    { "pdfPage": 6, "title": "Page 6", "panels": [] }
+  ]
+}

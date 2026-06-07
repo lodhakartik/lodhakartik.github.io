@@ -234,14 +234,32 @@
         </div>
       </article>
 
+      <article class="comic-card">
+        <div class="comic-cover">
+          <img src="./devradigani-adhyay-1/cover.jpg" alt="Devradigani Kshamashraman &mdash; Adhyay 1 cover" loading="lazy" />
+        </div>
+        <div class="comic-body">
+          <p class="comic-series">Jain Story Comic Series</p>
+          <h2 class="comic-name">Devradigani Kshamashraman</h2>
+          <p class="comic-subtitle">Adhyay 1</p>
+          <p class="comic-desc">The opening chapter of a Jain story comic &mdash; meet the world of Devradigani Kshamashraman, page by page.</p>
+          <div class="comic-meta">
+            <span class="chip">&#x1F4D6; 6 pages</span>
+            <span class="chip">Hinglish</span>
+            <span class="chip" id="count-comic-devradigani-adhyay-1" hidden>&#x1F338; &#x2026;</span>
+          </div>
+          <a class="read-button" href="./reader.html?id=devradigani-adhyay-1">Read &#x2192;</a>
+        </div>
+      </article>
+
     </section>
 
     <script>
-      (async () => {
-        const el = document.getElementById('count-comic-guru-pushya-yog');
+      async function showComicReads(elementId, counterName) {
+        const el = document.getElementById(elementId);
         if (!el) return;
         try {
-          const res = await fetch('https://api.counterapi.dev/v1/lodhakartik/comic-guru-pushya-yog/', { cache: 'no-store' });
+          const res = await fetch(`https://api.counterapi.dev/v1/lodhakartik/${counterName}/`, { cache: 'no-store' });
           if (!res.ok) return;
           const data = await res.json();
           const n = Number(data && data.count);
@@ -249,7 +267,9 @@
           el.hidden = false;
           el.textContent = `\u{1F338} ${n.toLocaleString()} reads`;
         } catch {}
-      })();
+      }
+      showComicReads('count-comic-guru-pushya-yog', 'comic-guru-pushya-yog');
+      showComicReads('count-comic-devradigani-adhyay-1', 'comic-devradigani-adhyay-1');
     </script>
 
     <footer>
