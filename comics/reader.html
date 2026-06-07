@@ -376,20 +376,6 @@
     let baseS = 1, baseTx = 0, baseTy = 0;
     let userS = 1, userTx = 0, userTy = 0;
 
-    // intro flow for entering a new page in panel mode
-    // states: null (no intro), 'page' (showing full page), 'title' (zoomed on header strip)
-    let introState = null;
-    let introTargetPanel = 0;
-    let introTimers = [];
-    // Intro phases (page -> title -> panel) are all reader-driven via next/prev now.
-
-    // page header strip rect — derived per-page from the first panel's y so it stays
-    // accurate even when a page has a different aspect ratio (e.g. "The Crowd").
-    function headerRectFor(page) {
-      const firstY = (page.panels && page.panels[0]) ? page.panels[0].y : 0.065;
-      return { x: 0.005, y: 0.0, w: 0.99, h: Math.max(0.045, firstY - 0.005) };
-    }
-
     // ----- elements -----
     const el = (id) => document.getElementById(id);
     const wrap = el('wrap');
@@ -439,7 +425,6 @@
         pdf = await loadingTask.promise;
 
         // restore state from hash
-        let hashHasPn = false;
         const hashStr = location.hash.replace(/^#/, '');
         if (hashStr) {
           const hashParams = new URLSearchParams(hashStr);
@@ -448,25 +433,17 @@
           const pnRaw = hashParams.get('pn');
           if (pnRaw !== null) {
             const pn = parseInt(pnRaw, 10);
-            if (!isNaN(pn)) { panelIdx = pn; hashHasPn = true; }
+            if (!isNaN(pn)) panelIdx = pn;
           }
         }
 
         loadingOverlay.hidden = true;
         await mountPageCanvas();
-        // Deep links with an explicit pn= jump straight to the panel + spotlight.
-        // The page→title intro only plays when crossing pages via Next during reading.
-        const hasPanels = panelIdx >= 0 && meta(pageIdx).panels.length > 0;
-        if (hasPanels && hashHasPn) {
+        if (panelIdx >= 0 && meta(pageIdx).panels.length > 0) {
           panelIdx = Math.max(0, Math.min(meta(pageIdx).panels.length - 1, panelIdx));
-          applyTransform();
-          updateUI();
-        } else if (hasPanels) {
-          startPageIntro(panelIdx);
-        } else {
-          applyTransform();
-          updateUI();
         }
+        applyTransform();
+        updateUI();
         updateHash();
         prefetchNeighbors();
         wireEvents();
@@ -554,14 +531,7 @@
       }
       const m = meta(pageIdx);
       let s, cx, cy;
-      if (introState === 'title') {
-        // zoom into the page header strip (PAGE N · title)
-        const r = headerRectFor(m);
-        const pw = r.w * CW, ph = r.h * CH;
-        s = Math.min(vw / pw, vh / ph) * 0.92;
-        cx = (r.x + r.w / 2) * CW;
-        cy = (r.y + r.h / 2) * CH;
-      } else if (introState === null && panelIdx >= 0 && m.panels && m.panels[panelIdx]) {
+      if (panelIdx >= 0 && m.panels && m.panels[panelIdx]) {
         const r = m.panels[panelIdx];
         // small bleed margin around the panel rect for breathing room
         const MX = 0.015, MY = 0.010;
@@ -576,7 +546,7 @@
         cx = (x0 + ew / 2) * CW;
         cy = (y0 + eh / 2) * CH;
       } else {
-        // full page (intro 'page' phase, page mode, or no-panel page)
+        // page mode, or panel mode on a page with no panels (e.g. cover)
         s = Math.min(vw / CW, vh / CH) * 0.94;
         cx = CW / 2;
         cy = CH / 2;
@@ -636,20 +606,16 @@
       return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
     }
 
-    // Position the spotlight overlay over the active subject in canvas-space.
-    // Subject is the tight panel rect in panel mode, the header strip during the
-    // intro 'title' phase, and nothing during 'page' phase / page mode.
+    // Position the spotlight overlay over the active panel in canvas-space.
+    // Hidden in page mode and on panel-less pages (e.g. cover).
     function updatePanelSpotlight() {
       const spotlight = el('panelSpotlight');
       if (!spotlight) return;
       const canvas = activeCanvas();
       const m = meta(pageIdx);
-      let r = null;
-      if (canvas && introState === 'title') {
-        r = headerRectFor(m);
-      } else if (canvas && introState === null && panelIdx >= 0 && m.panels && m.panels[panelIdx]) {
-        r = tightPanelRect(m.panels, panelIdx);
-      }
+      const r = (canvas && panelIdx >= 0 && m.panels && m.panels[panelIdx])
+        ? tightPanelRect(m.panels, panelIdx)
+        : null;
       if (!r) {
         spotlight.classList.remove('visible');
         return;
@@ -719,39 +685,6 @@
       userTy = fy - baseTy * userS;
     }
 
-    // ----- page intro flow -----
-    function cancelIntroSilent() {
-      introTimers.forEach(clearTimeout);
-      introTimers = [];
-      introState = null;
-    }
-
-    function skipIntro() {
-      if (introState === null) return false;
-      cancelIntroSilent();
-      applyTransform();
-      updateUI();
-      return true;
-    }
-
-    function startPageIntro(targetPanel) {
-      const m = meta(pageIdx);
-      cancelIntroSilent();
-      resetUserTransform();
-      if (!m.panels || m.panels.length === 0) {
-        // no panels on this page — just show the full page
-        panelIdx = 0; // sentinel; applyTransform falls back to full page
-        applyTransform();
-        updateUI();
-        return;
-      }
-      introTargetPanel = Math.max(0, Math.min(m.panels.length - 1, targetPanel));
-      panelIdx = introTargetPanel; // keep state coherent (mode = panel)
-      introState = 'page';
-      applyTransform(); // full page (introState !== null) — holds until Next
-      updateUI();
-    }
-
     function prefetchNeighbors() {
       const n = manifest.pages[pageIdx + 1];
       const p = manifest.pages[pageIdx - 1];
@@ -774,25 +707,9 @@
 
     async function next() {
       resetUserTransform();
-      // intro 'page' phase → step to the title stop
-      if (introState === 'page') {
-        cancelIntroSilent();
-        introState = 'title';
-        applyTransform();
-        updateUI();
-        return;
-      }
-      // intro 'title' phase → reveal first real panel (panelIdx already preset)
-      if (introState === 'title') {
-        cancelIntroSilent();
-        applyTransform();
-        updateUI();
-        updateHash();
-        return;
-      }
       const m = meta(pageIdx);
       if (panelIdx === -1) {
-        // page mode — simple page advance, no intro
+        // page mode — simple page advance
         if (pageIdx < manifest.pages.length - 1) {
           pageIdx++;
           await mountPageCanvas();
@@ -811,36 +728,20 @@
         updateHash();
         return;
       }
-      // panel mode — cross to next page (with intro)
+      // panel mode — cross to next page, land on its first panel (or full page if none)
       if (pageIdx < manifest.pages.length - 1) {
         pageIdx++;
         await mountPageCanvas();
+        panelIdx = 0;
+        applyTransform();
+        updateUI();
         updateHash();
         prefetchNeighbors();
-        startPageIntro(0);
       }
     }
 
     async function prev() {
       resetUserTransform();
-      // intro 'page' or 'title' phase → step out of this page's intro backwards
-      if (introState === 'page' || introState === 'title') {
-        cancelIntroSilent();
-        if (pageIdx > 0) {
-          pageIdx--;
-          await mountPageCanvas();
-          const pm = meta(pageIdx);
-          panelIdx = Math.max(0, pm.panels.length - 1);
-          applyTransform();
-          updateUI();
-          updateHash();
-          prefetchNeighbors();
-        } else {
-          applyTransform();
-          updateUI();
-        }
-        return;
-      }
       if (panelIdx === -1) {
         if (pageIdx > 0) {
           pageIdx--;
@@ -860,16 +761,7 @@
         updateHash();
         return;
       }
-      // panel mode — at first panel: back to the title stop of the same page
-      const m = meta(pageIdx);
-      if (panelIdx === 0 && m.panels && m.panels.length > 0) {
-        introState = 'title';
-        applyTransform();
-        updateUI();
-        updateHash();
-        return;
-      }
-      // fallback: no panels on current page → cross to previous page (last panel, no intro)
+      // panel mode — at first panel: cross to previous page's last panel
       if (pageIdx > 0) {
         pageIdx--;
         await mountPageCanvas();
@@ -883,30 +775,8 @@
     }
 
     async function setMode(mode) {
-      cancelIntroSilent();
       resetUserTransform();
-      if (mode === 'page') {
-        panelIdx = -1;
-        applyTransform();
-        updateUI();
-        updateHash();
-        return;
-      }
-      // panel mode
-      const m = meta(pageIdx);
-      if (m.panels.length > 0) {
-        // same-page Page→Panel toggle: jump straight to panel 0, no intro
-        panelIdx = 0;
-        applyTransform();
-        updateUI();
-        updateHash();
-        return;
-      }
-      // current page has no panels (cover or any panel-less page) — stay here
-      // and show full page. applyTransform falls back to full-page render because
-      // panels[0] is undefined. Next falls through in next() to play the intro
-      // on the following page.
-      panelIdx = 0;
+      panelIdx = (mode === 'page') ? -1 : 0;
       applyTransform();
       updateUI();
       updateHash();
@@ -921,9 +791,7 @@
       const contentCount = manifest.pages.filter(p => p.pdfPage !== coverPdfPage).length;
       const printedNumber = isCover ? 0 : pageIdx;
       let ind = isCover ? 'Cover' : `Page ${printedNumber} of ${contentCount}`;
-      if (introState === 'title') {
-        ind += `  ·  Title`;
-      } else if (!introState && panelIdx >= 0 && m.panels && m.panels.length > 0 && panelIdx < m.panels.length) {
+      if (panelIdx >= 0 && m.panels && m.panels.length > 0 && panelIdx < m.panels.length) {
         ind += `  ·  Panel ${panelIdx + 1} of ${m.panels.length}`;
       }
       el('indicator').textContent = ind;
@@ -962,37 +830,26 @@
           setMode('panel');
         } else if (e.key === 'Home') {
           (async () => {
-            cancelIntroSilent();
             resetUserTransform();
             const wasPanelMode = panelIdx >= 0;
             pageIdx = 0;
             panelIdx = wasPanelMode ? 0 : -1;
             await mountPageCanvas();
-            if (wasPanelMode && meta(pageIdx).panels.length > 0) {
-              startPageIntro(0);
-            } else {
-              applyTransform();
-              updateUI();
-            }
+            applyTransform();
+            updateUI();
             updateHash();
             prefetchNeighbors();
           })();
         } else if (e.key === 'End') {
           (async () => {
-            cancelIntroSilent();
             resetUserTransform();
             const wasPanelMode = panelIdx >= 0;
             pageIdx = manifest.pages.length - 1;
             const lm = meta(pageIdx);
-            const lastPanel = Math.max(0, lm.panels.length - 1);
-            panelIdx = wasPanelMode ? lastPanel : -1;
+            panelIdx = wasPanelMode ? Math.max(0, lm.panels.length - 1) : -1;
             await mountPageCanvas();
-            if (wasPanelMode && lm.panels.length > 0) {
-              startPageIntro(lastPanel);
-            } else {
-              applyTransform();
-              updateUI();
-            }
+            applyTransform();
+            updateUI();
             updateHash();
             prefetchNeighbors();
           })();
@@ -1182,20 +1039,17 @@
         const newPanel = (pn === null) ? -1 : parseInt(pn, 10);
         (async () => {
           if (newPage !== pageIdx) {
-            cancelIntroSilent();
             resetUserTransform();
             pageIdx = newPage;
             panelIdx = newPanel;
             await mountPageCanvas();
-            if (newPanel >= 0 && meta(pageIdx).panels.length > 0) {
-              startPageIntro(newPanel);
-            } else {
-              applyTransform();
-              updateUI();
+            if (panelIdx >= 0 && meta(pageIdx).panels.length > 0) {
+              panelIdx = Math.max(0, Math.min(meta(pageIdx).panels.length - 1, panelIdx));
             }
+            applyTransform();
+            updateUI();
             prefetchNeighbors();
           } else if (newPanel !== panelIdx) {
-            skipIntro();
             resetUserTransform();
             panelIdx = newPanel;
             applyTransform();
