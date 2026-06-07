@@ -1,18 +1,72 @@
 {
   "id": "devradigani-adhyay-1",
   "title": "Devradigani Kshamashraman",
-  "subtitle": "Adhyay 1",
-  "series": "Jain Story Comic Series",
+  "subtitle": "Adhyay 1: Divya Sankalp aur Bhavishyavaani",
+  "series": "Shrut Rakshak Comic Series",
   "author": "Kartik Lodha",
   "language": "Hinglish",
   "pdf": "comic.pdf",
   "cover": { "pdfPage": 1 },
   "pages": [
-    { "pdfPage": 1, "title": "Cover",  "panels": [] },
-    { "pdfPage": 2, "title": "Page 2", "panels": [] },
-    { "pdfPage": 3, "title": "Page 3", "panels": [] },
-    { "pdfPage": 4, "title": "Page 4", "panels": [] },
-    { "pdfPage": 5, "title": "Page 5", "panels": [] },
-    { "pdfPage": 6, "title": "Page 6", "panels": [] }
+    {
+      "pdfPage": 1,
+      "title": "Cover",
+      "panels": []
+    },
+    {
+      "pdfPage": 2,
+      "title": "Saudharm Kalp (Swarg ka Vaibhav)",
+      "panels": [
+        { "x": 0.0200, "y": 0.1020, "w": 0.9600, "h": 0.2000 },
+        { "x": 0.0200, "y": 0.3100, "w": 0.9600, "h": 0.2100 },
+        { "x": 0.0200, "y": 0.5300, "w": 0.4750, "h": 0.2000 },
+        { "x": 0.5050, "y": 0.5300, "w": 0.4750, "h": 0.2000 },
+        { "x": 0.0200, "y": 0.7400, "w": 0.9600, "h": 0.2150 }
+      ]
+    },
+    {
+      "pdfPage": 3,
+      "title": "Tirthankar ke Garbh ka Haran aur Sthapana",
+      "panels": [
+        { "x": 0.0200, "y": 0.1000, "w": 0.4750, "h": 0.2700 },
+        { "x": 0.5050, "y": 0.1000, "w": 0.4750, "h": 0.2700 },
+        { "x": 0.0200, "y": 0.3800, "w": 0.4750, "h": 0.2500 },
+        { "x": 0.5050, "y": 0.3800, "w": 0.4750, "h": 0.2500 },
+        { "x": 0.0200, "y": 0.6400, "w": 0.4750, "h": 0.2800 },
+        { "x": 0.5050, "y": 0.6400, "w": 0.4750, "h": 0.2800 }
+      ]
+    },
+    {
+      "pdfPage": 4,
+      "title": "Rajgruhi ki Bhavishyavani (The Prophecy at Rajgruhi)",
+      "panels": [
+        { "x": 0.0200, "y": 0.1000, "w": 0.9600, "h": 0.2500 },
+        { "x": 0.0200, "y": 0.3600, "w": 0.9600, "h": 0.1900 },
+        { "x": 0.0200, "y": 0.5600, "w": 0.9600, "h": 0.1900 },
+        { "x": 0.0200, "y": 0.7600, "w": 0.9600, "h": 0.1700 }
+      ]
+    },
+    {
+      "pdfPage": 5,
+      "title": "Aagami Janm Hetu Divya Suraksha-Vidhan",
+      "panels": [
+        { "x": 0.0200, "y": 0.1000, "w": 0.9600, "h": 0.2200 },
+        { "x": 0.0200, "y": 0.3300, "w": 0.4750, "h": 0.1700 },
+        { "x": 0.5050, "y": 0.3300, "w": 0.4750, "h": 0.1700 },
+        { "x": 0.0200, "y": 0.5100, "w": 0.9600, "h": 0.2100 },
+        { "x": 0.0200, "y": 0.7300, "w": 0.9600, "h": 0.2200 }
+      ]
+    },
+    {
+      "pdfPage": 6,
+      "title": "Kalayug ka Pradurbhav aur Divya Janm (The Divine Birth in Veraval)",
+      "panels": [
+        { "x": 0.0200, "y": 0.1300, "w": 0.9600, "h": 0.1700 },
+        { "x": 0.0200, "y": 0.3100, "w": 0.9600, "h": 0.1900 },
+        { "x": 0.0200, "y": 0.5100, "w": 0.9600, "h": 0.2000 },
+        { "x": 0.0200, "y": 0.7200, "w": 0.4750, "h": 0.2100 },
+        { "x": 0.5050, "y": 0.7200, "w": 0.4750, "h": 0.2100 }
+      ]
+    }
   ]
 }
