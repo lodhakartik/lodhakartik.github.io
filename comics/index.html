@@ -14,6 +14,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Yatra+One&display=swap" />
 
+  <script>
+    (function () {
+      var DEV_PASSWORD = 'Ayush&&&123';
+      try {
+        var params = new URLSearchParams(location.search);
+        if (params.has('preview') && sessionStorage.getItem('devAccess') !== '1') {
+          var entered = window.prompt('Developer preview \u2014 enter password:');
+          if (entered === DEV_PASSWORD) sessionStorage.setItem('devAccess', '1');
+        }
+        if (sessionStorage.getItem('devAccess') === '1') {
+          document.documentElement.classList.add('dev-unlocked');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <style>
+    .dev-only { display: none !important; }
+    html.dev-unlocked .dev-only { display: revert !important; }
+  </style>
+
   <style>
     :root {
       --parchment-light: #FBF1D9;
@@ -233,7 +254,7 @@
         </div>
       </article>
 
-      <article class="comic-card">
+      <article class="comic-card dev-only">
         <div class="comic-cover">
           <img src="./devradigani-adhyay-1/cover.jpg?v=2" alt="Devradigani Kshamashraman &mdash; Adhyay 1 cover" loading="lazy" />
         </div>

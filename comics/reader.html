@@ -14,6 +14,29 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 
+  <script>
+    (function () {
+      var DEV_PASSWORD = 'Ayush&&&123';
+      var GATED_IDS = ['devradigani-adhyay-1'];
+      try {
+        var params = new URLSearchParams(location.search);
+        if (params.has('preview') && sessionStorage.getItem('devAccess') !== '1') {
+          var entered = window.prompt('Developer preview \u2014 enter password:');
+          if (entered === DEV_PASSWORD) sessionStorage.setItem('devAccess', '1');
+        }
+        var id = params.get('id') || '';
+        if (GATED_IDS.indexOf(id) !== -1 && sessionStorage.getItem('devAccess') !== '1') {
+          var pw = window.prompt('This comic is in developer preview \u2014 enter password:');
+          if (pw === DEV_PASSWORD) {
+            sessionStorage.setItem('devAccess', '1');
+          } else {
+            location.replace('./');
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <style>
     :root {
       --parchment-light: #FBF1D9;
