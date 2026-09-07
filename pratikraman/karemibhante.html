@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Karemi Bhante · Sāmāyika Pratijñā · Pratikraman</title>
+  <meta name="description" content="Iriyavahiyam sutra recitation aid — full Prakrit paati, Hindi/English meaning, word-by-word, and pictorial meaning. Sthanakvasi. By Kartik Lodha." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&family=Patrick+Hand&family=Yatra+One&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --panel-bg:        #FFFBF0;
+      --hl:              #FFF3CD;
+      --shadow-soft: 0 2px 0 rgba(58,31,14,.08), 0 5px 14px rgba(58,31,14,.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(200,161,75,.16), transparent 42%),
+        radial-gradient(circle at 90% 100%, rgba(122,29,29,.10), transparent 42%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    .dev      { font-family: "Yatra One", "Mukta", serif; }
+    .dev-body { font-family: "Mukta", system-ui, sans-serif; }
+
+    /* ---------- slim top bar ---------- */
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      border-bottom: 1.5px solid var(--gold);
+      background: rgba(255,251,240,.7);
+      backdrop-filter: blur(4px);
+    }
+    .topbar .back { color: var(--maroon); font-weight: 700; text-decoration: none; font-size: .95rem; white-space: nowrap; }
+    .topbar .title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+    .topbar .title .dv { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.35rem; line-height: 1; }
+    .topbar .title .rom { color: var(--ink-soft); font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar .draft { font-size: .68rem; background: #FFF3CD; border: 1px dashed var(--gold-deep); color: var(--gold-deep); padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+    .spacer { flex: 1; }
+
+    /* language toggle */
+    .lang-toggle { display: inline-flex; border: 1.5px solid var(--maroon); border-radius: 999px; overflow: hidden; }
+    .lang-toggle button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .82rem;
+      border: none; background: #fff; color: var(--maroon);
+      padding: 5px 14px; cursor: pointer;
+    }
+    .lang-toggle button.on { background: var(--maroon); color: #fff; }
+
+    /* prev/next */
+    .nav-btns { display: inline-flex; gap: 6px; }
+    .nav-btns button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .95rem;
+      border: 1.5px solid var(--maroon); background: #fff; color: var(--maroon);
+      border-radius: 999px; width: 34px; height: 34px; cursor: pointer;
+    }
+    .nav-btns button:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ---------- 4-panel grid, fills remaining height ---------- */
+    .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      grid-template-rows: 1.15fr 1fr;
+      grid-template-areas:
+        "sutra   words"
+        "meaning pic";
+      gap: 12px;
+      padding: 12px 16px 14px;
+    }
+    .panel {
+      background: var(--panel-bg);
+      border: 1.5px solid var(--gold);
+      border-radius: 14px;
+      box-shadow: var(--shadow-soft);
+      padding: 24px 14px 12px;
+      position: relative;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel .label {
+      position: absolute; top: -10px; left: 14px;
+      background: var(--maroon); color: #fff;
+      font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 999px;
+    }
+    .panel .body { overflow-y: auto; min-height: 0; padding-right: 4px; }
+    #sutra   { grid-area: sutra; }
+    #meaning { grid-area: meaning; }
+    #words   { grid-area: words; }
+    #pic     { grid-area: pic; }
+
+    /* ---- Panels A & B: flowing paragraph with synced phrase-boxes ---- */
+    .para { margin: 0; }
+    #sutra .para   { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.24rem; line-height: 2.0; }
+    #meaning .para { font-family: "Mukta", sans-serif; color: var(--ink); font-size: 1.02rem; line-height: 1.95; }
+
+    .ph {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+      border: 1.5px solid transparent;   /* the box, transparent until synced */
+      transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+    .ph sup { font-family: "Mukta", sans-serif; font-size: .55em; color: var(--gold-deep); font-weight: 700; padding-left: 1px; vertical-align: super; }
+    /* hover-sync box (lighter) */
+    .ph.hl { background: rgba(200,161,75,.22); border-color: var(--gold-deep); }
+    /* selected box (stronger, persistent) */
+    .ph.active { background: var(--hl); border-color: var(--maroon); box-shadow: 0 0 0 1px var(--maroon); }
+
+    /* ---- Panel C: word-by-word ---- */
+    .word { display: grid; grid-template-columns: minmax(78px,auto) 1fr; gap: 10px; align-items: baseline; padding: 5px 4px; border-bottom: 1px dotted rgba(140,106,31,.32); }
+    .word:last-child { border-bottom: none; }
+    .word .w { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.04rem; }
+    .word .w small { display: block; font-family: "Mukta"; font-style: italic; color: var(--ink-soft); font-size: .68rem; }
+    .word .m { font-family: "Mukta", sans-serif; font-size: .92rem; color: var(--ink); }
+
+    /* ---- Panel D: pictorial meaning ---- */
+    #pic .body { align-items: center; text-align: center; display: flex; flex-direction: column; }
+    .pic-frame {
+      width: 100%; max-width: 240px; aspect-ratio: 4/3; margin: 0 auto 8px;
+      border: 2px dashed var(--gold); border-radius: 12px;
+      background: repeating-linear-gradient(45deg, #fff, #fff 10px, #FDF6E3 10px, #FDF6E3 20px);
+      display: grid; place-items: center; overflow: hidden; position: relative;
+    }
+    .pic-frame img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .pic-frame .ph { font-family: "Mukta"; color: var(--gold-deep); font-size: .8rem; padding: 8px; }
+    .pic-cap { font-family: "Mukta", sans-serif; font-size: .9rem; color: var(--ink-soft); margin-bottom: 8px; line-height: 1.4; }
+    .prompt-btn {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .8rem;
+      border: 1.5px solid var(--gold-deep); background: #fff; color: var(--gold-deep);
+      border-radius: 999px; padding: 5px 12px; cursor: pointer;
+    }
+    .prompt-btn:hover { background: var(--gold-deep); color: #fff; }
+    .prompt-box { display: none; margin-top: 8px; width: 100%; }
+    .prompt-box textarea {
+      width: 100%; height: 76px; font-family: "Mukta", sans-serif; font-size: .74rem;
+      border: 1px solid var(--gold); border-radius: 8px; padding: 6px; resize: none; color: var(--ink-soft);
+      background: #fffdf6;
+    }
+
+    /* ---------- responsive: allow scroll on small screens ---------- */
+    @media (max-width: 720px) {
+      body { height: auto; overflow: auto; }
+      .stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-template-areas: "sutra" "meaning" "words" "pic";
+      }
+      .panel { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="back" href="../index.html">&larr;</a>
+    <div class="title">
+      <span class="dv">करेमि भंते</span>
+      <span class="rom">Karemi Bhante · Sāmāyika Pratijñā · Sthānakvāsī</span>
+    </div>
+    <span class="draft">⚠ DRAFT</span>
+    <span class="spacer"></span>
+    <div class="nav-btns">
+      <button id="prevBtn" title="Previous line">&larr;</button>
+      <button id="nextBtn" title="Next line">&rarr;</button>
+    </div>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="hi" class="on">हिंदी</button>
+      <button data-lang="en">English</button>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- PANEL A: full Prakrit sutra (one paragraph) -->
+    <section class="panel" id="sutra">
+      <span class="label">A · मूल पाठ · Prākṛt</span>
+      <div class="body"><p class="para dev" id="sutraBody"></p></div>
+    </section>
+
+    <!-- PANEL C: word-by-word -->
+    <section class="panel" id="words">
+      <span class="label">C · शब्दार्थ · Words</span>
+      <div class="body" id="wordBody"></div>
+    </section>
+
+    <!-- PANEL B: full meaning (one paragraph, synced boxes) -->
+    <section class="panel" id="meaning">
+      <span class="label" id="meaningLabel">B · अर्थ · Meaning</span>
+      <div class="body"><p class="para" id="meaningBody"></p></div>
+    </section>
+
+    <!-- PANEL D: pictorial meaning -->
+    <section class="panel" id="pic">
+      <span class="label">D · चित्र-अर्थ · Pictorial</span>
+      <div class="body">
+        <div class="pic-frame">
+          <img id="picImg" alt="pictorial meaning" />
+          <span class="ph" id="picPh">चित्र यहाँ आएगा<br><small>(image will load here)</small></span>
+        </div>
+        <div class="pic-cap dev-body" id="picCap"></div>
+        <button class="prompt-btn" id="promptBtn">🎨 Image prompt</button>
+        <div class="prompt-box" id="promptBox">
+          <textarea id="promptText" readonly></textarea>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ============================================================
+    //  DRAFT content — Karemi Bhante · Sāmāyika Pratijñā (Sthānakvāsī).  VERIFY before publishing.
+    //  Sources: jainknowledge.com, lokdayro.com, jinavachan (Karemi Bhante sūtra).
+    //  Each line drives all 4 panels. Meanings carry {hi, en}.
+    // ============================================================
+    const SEG = [
+      {
+        n: 1,
+        prakrit: "करेमि भंते! सामाइयं,",
+        rom: "Karemi bhante! sāmāiyaṁ,",
+        hi: "हे भगवन्! मैं सामायिक (समता का भाव) धारण करता हूँ,",
+        en: "O revered Guru! I undertake Sāmāyika (the state of equanimity),",
+        words: [
+          { w: "करेमि",   t: "karemi",   hi: "मैं करता हूँ / धारण करता हूँ", en: "I do / I undertake" },
+          { w: "भंते",     t: "bhante",   hi: "हे पूज्य गुरु", en: "O revered one (Guru)" },
+          { w: "सामाइयं", t: "sāmāiyaṁ", hi: "सामायिक (समता का भाव)", en: "Sāmāyika (equanimity)" }
+        ],
+        pic: "A lay devotee (shravak) in simple plain white clothes seated calmly cross-legged on a plain flat mat, hands folded softly in the lap, eyes gently lowered, a serene composed expression of equanimity, a small white muhpatti held near the mouth and a simple mala resting beside, before a seated Sthanakvasi guru in plain white cloth with white muhpatti and woolen rajoharan whisk, warm quiet light in a bare simple hall, the devotee taking up the calm vow of samayik. No idols, no temple.",
+        capHi: "भक्त गुरु के समक्ष सामायिक व्रत धारण करता है।",
+        capEn: "The devotee undertakes the vow of Samayik before the guru."
+      },
+      {
+        n: 2,
+        prakrit: "सावज्जं जोगं पच्चक्खामि,",
+        rom: "Sāvajjaṁ jogaṁ paccakkhāmi,",
+        hi: "मैं सभी पापयुक्त (सावद्य) प्रवृत्तियों का त्याग / प्रत्याख्यान करता हूँ,",
+        en: "I renounce all sinful (sāvadya) activity,",
+        words: [
+          { w: "सावज्जं",   t: "sāvajjaṁ",   hi: "पापयुक्त (सावद्य)", en: "sinful (with harm)" },
+          { w: "जोगं",       t: "jogaṁ",       hi: "योग / प्रवृत्ति (मन-वचन-काय की क्रिया)", en: "activity (of mind, speech, body)" },
+          { w: "पच्चक्खामि", t: "paccakkhāmi", hi: "मैं त्याग / प्रत्याख्यान करता हूँ", en: "I renounce / forswear" }
+        ],
+        pic: "A serene lay devotee in simple white clothes seated calmly in samayik with hands raised gently in a quiet gesture of renunciation, while faint dark grey wisps of smoke - representing sinful activity - drift away from them and dissolve into a soft warm golden light. Peaceful expression of letting go and purity. No idols, no temple.",
+        capHi: "सब पापमय प्रवृत्तियों का त्याग।",
+        capEn: "Renouncing all sinful activity."
+      },
+      {
+        n: 3,
+        prakrit: "जाव नियमं पज्जुवासामि,",
+        rom: "Jāva niyamaṁ pajjuvāsāmi,",
+        hi: "जब तक मैं इस नियम (व्रत) में स्थित रहूँ / उसकी उपासना करूँ, तब तक के लिए,",
+        en: "for as long as I abide in and observe this vow (niyama),",
+        words: [
+          { w: "जाव",        t: "jāva",        hi: "जब तक", en: "as long as / until" },
+          { w: "नियमं",       t: "niyamaṁ",     hi: "नियम / व्रत", en: "the vow / restraint" },
+          { w: "पज्जुवासामि", t: "pajjuvāsāmi", hi: "मैं उपासना करता हूँ / उसमें स्थित रहता हूँ", en: "I observe / abide in it" }
+        ],
+        pic: "A lay devotee in simple white clothes seated very still and settled on a plain mat in deep calm samayik, a soft steady warm circle of light gently enclosing them like a protective boundary of the vow, suggesting a fixed span of time held in stillness and observance. Serene, rooted, unmoving devotion. No idols, no temple.",
+        capHi: "जब तक व्रत में स्थित रहूँ, तब तक।",
+        capEn: "For as long as I abide in the vow."
+      },
+      {
+        n: 4,
+        prakrit: "दुविहं तिविहेणं —",
+        rom: "Duvihaṁ tivihaeṇaṁ —",
+        hi: "दो प्रकार से और तीन योगों (साधनों) से —",
+        en: "in two ways and by three modes —",
+        words: [
+          { w: "दुविहं",   t: "duvihaṁ",    hi: "दो प्रकार से (करना, कराना)", en: "in two ways (doing, causing)" },
+          { w: "तिविहेणं", t: "tivihaeṇaṁ", hi: "तीन योगों से (मन, वचन, काय)", en: "by three modes (mind, speech, body)" }
+        ],
+        pic: "A clean gentle study composition on plain parchment showing the classic Jain 2×3 formula of restraint: on one side two soft symbolic hands - one 'doing' an act and one 'directing another to do' - and on the other side three softly glowing gentle symbols arranged in a row representing mind (a soft glow at a head), speech (a glow at lips) and body (a glow at a figure), all calm and clearly separated, illustrating two ways and three modes. Simple, clean, educational, no overlap. No idols, no temple.",
+        capHi: "दो प्रकार × तीन योग = मन-वचन-काय।",
+        capEn: "Two ways × three modes — mind, speech, body."
+      },
+      {
+        n: 5,
+        prakrit: "मणेणं वायाए कायेणं,",
+        rom: "Maṇeṇaṁ vāyāe kāyeṇaṁ,",
+        hi: "मन से, वचन से और काया (शरीर) से,",
+        en: "by mind, by speech, and by body,",
+        words: [
+          { w: "मणेणं",   t: "maṇeṇaṁ", hi: "मन से", en: "by mind" },
+          { w: "वायाए",   t: "vāyāe",   hi: "वचन से", en: "by speech" },
+          { w: "कायेणं",  t: "kāyeṇaṁ", hi: "काया / शरीर से", en: "by body" }
+        ],
+        pic: "A single serene lay devotee in simple white clothes seated calmly in samayik, shown with three soft distinct gentle glows: a warm glow at the head (mind), a soft glow at the lips (speech) and a gentle glow across the folded hands and body (body), all radiating calm harmony together. Tender, balanced, contemplative. No idols, no temple.",
+        capHi: "तीनों योग — मन, वचन और काया।",
+        capEn: "The three modes — mind, speech and body."
+      },
+      {
+        n: 6,
+        prakrit: "न करेमि, न कारवेमि,",
+        rom: "Na karemi, na kāravemi,",
+        hi: "न स्वयं पाप करूँगा, न दूसरों से करवाऊँगा,",
+        en: "I will neither do (sin) myself, nor cause others to do it,",
+        words: [
+          { w: "न",        t: "na",        hi: "नहीं", en: "not" },
+          { w: "करेमि",    t: "karemi",    hi: "स्वयं करूँगा", en: "I will do (myself)" },
+          { w: "न",        t: "na",        hi: "नहीं", en: "not" },
+          { w: "कारवेमि",  t: "kāravemi",  hi: "दूसरों से करवाऊँगा", en: "cause others to do" }
+        ],
+        pic: "A calm lay devotee in simple white clothes seated in samayik gently raising one open palm in a soft peaceful gesture of refusal, quietly declining to commit a harmful act and also declining to ask another to do it; two faint greyish tempting impulses fade away in the warm light. Composed, resolute, gentle non-doing. No idols, no temple.",
+        capHi: "न स्वयं करना, न दूसरों से कराना।",
+        capEn: "Neither doing nor causing to be done."
+      },
+      {
+        n: 7,
+        prakrit: "तस्स भंते! पडिक्कमामि,",
+        rom: "Tassa bhante! paḍikkamāmi,",
+        hi: "हे भगवन्! उन (पिछले पापों) से मैं पीछे हटता हूँ / प्रतिक्रमण करता हूँ,",
+        en: "O revered Guru! from those (past sins) I turn back / repent,",
+        words: [
+          { w: "तस्स",       t: "tassa",       hi: "उन (पापों) के लिए", en: "from those (sins)" },
+          { w: "भंते",       t: "bhante",      hi: "हे पूज्य गुरु", en: "O revered one (Guru)" },
+          { w: "पडिक्कमामि", t: "paḍikkamāmi", hi: "मैं पीछे हटता हूँ / प्रतिक्रमण करता हूँ", en: "I step back / I repent" }
+        ],
+        pic: "A lay devotee in simple white clothes seated before a seated Sthanakvasi guru (plain white cloth, white muhpatti, woolen rajoharan), gently turning and stepping back inwardly from a faint fading grey shadow of a past fault behind them, palms joined, a look of sincere withdrawal and repentance, the guru calm and witnessing. Warm reflective light. No idols, no temple.",
+        capHi: "पिछले पापों से पीछे हटना — प्रतिक्रमण।",
+        capEn: "Stepping back from past sins — repentance."
+      },
+      {
+        n: 8,
+        prakrit: "निंदामि, गरिहामि,",
+        rom: "Nindāmi, garihāmi,",
+        hi: "मैं (स्वयं की) निन्दा करता हूँ, और गुरु के समक्ष उन दोषों की गर्हा (भर्त्सना) करता हूँ,",
+        en: "I reproach myself, and I condemn (those faults) before the guru,",
+        words: [
+          { w: "निंदामि", t: "nindāmi",  hi: "मैं आत्म-निन्दा करता हूँ", en: "I reproach / censure myself" },
+          { w: "गरिहामि", t: "garihāmi", hi: "गुरु के समक्ष गर्हा / भर्त्सना करता हूँ", en: "I condemn (before the guru)" }
+        ],
+        pic: "A lay devotee in simple white clothes kneeling with a bowed head and a tender remorseful expression, one hand softly over the heart in self-reproach, before a seated Sthanakvasi guru (plain white cloth, white muhpatti, woolen rajoharan) to whom they openly and humbly acknowledge and condemn their faults. Sincere, humble, honest confession in warm gentle light. No idols, no temple.",
+        capHi: "आत्म-निन्दा और गुरु-समक्ष गर्हा।",
+        capEn: "Self-reproach and condemnation before the guru."
+      },
+      {
+        n: 9,
+        prakrit: "अप्पाणं वोसिरामि।",
+        rom: "Appāṇaṁ vosirāmi.",
+        hi: "और अपने उस पापमय स्वरूप (आसक्ति) का त्याग / व्युत्सर्ग करता हूँ।",
+        en: "and I renounce / abandon my sinful self (that wrongdoing).",
+        words: [
+          { w: "अप्पाणं",  t: "appāṇaṁ",  hi: "अपने (पापमय) स्वरूप का", en: "my (sinful) self" },
+          { w: "वोसिरामि", t: "vosirāmi", hi: "त्याग / व्युत्सर्ग करता हूँ", en: "I abandon / renounce" }
+        ],
+        pic: "A lay devotee in simple white clothes seated in deep serene equanimity, fully still and radiant with inner peace, the last faint grey wisp of past wrongdoing dissolving completely into a soft warm golden light around them, hands resting calmly, face utterly serene in profound renunciation and release. The pinnacle of equanimity and letting go of the sinful self. No idols, no temple.",
+        capHi: "पापमय स्वरूप का त्याग — गहन समता।",
+        capEn: "Renouncing the sinful self — deep equanimity."
+      }
+    ];
+
+    const IMG_PREFIX = "img/karemibhante-";   // drop img/karemibhante-0.png ... -8.png to fill Panel D
+
+    // Shared render style + Sthanakvasi guardrails, appended to every image prompt.
+    const PIC_STYLE = "Rendered as a hand-drawn COLORED-PENCIL SKETCH: visible pencil strokes and paper tooth, soft layered shading, delicate line work, warm gentle earthy palette (cream, ochre-gold, deep maroon, muted sage green, soft browns) on an aged parchment-cream background. Serene, tender, devotional Jain mood. Sthanakvasi tradition — strictly aniconic: NO idols, murtis or ornate temple; any monk/nun wears plain white cloth with a white muhpatti (mouth-cloth) and holds a soft woolen rajoharan whisk; laypeople in simple modest clothes. No text, no lettering, no logos. 4:3 composition, gentle soft lighting.";
+    let cur = 0;
+    let lang = "hi";
+
+    const sutraBody   = document.getElementById('sutraBody');
+    const meaningBody = document.getElementById('meaningBody');
+    const wordBody    = document.getElementById('wordBody');
+
+    // ---- build Panel A (full sutra) & Panel B (full meaning) as paragraphs of phrase-spans ----
+    function marker(s) { return (s.n === "◈") ? "◈" : s.n; }
+
+    function hoverSync(i, on) {
+      [sutraBody, meaningBody].forEach(p => {
+        const el = p.querySelector('.ph[data-i="' + i + '"]');
+        if (el && !el.classList.contains('active')) el.classList.toggle('hl', on);
+      });
+    }
+
+    SEG.forEach((s, i) => {
+      const a = document.createElement('span');
+      a.className = 'ph'; a.dataset.i = i;
+      a.innerHTML = s.prakrit + '<sup>' + marker(s) + '</sup>';
+
+      const b = document.createElement('span');
+      b.className = 'ph'; b.dataset.i = i;   // meaning text filled by renderMeaningText()
+
+      [a, b].forEach(el => {
+        el.addEventListener('mouseenter', () => hoverSync(i, true));
+        el.addEventListener('mouseleave', () => hoverSync(i, false));
+        el.addEventListener('click', () => select(i));
+      });
+
+      sutraBody.appendChild(a);   sutraBody.appendChild(document.createTextNode(' '));
+      meaningBody.appendChild(b); meaningBody.appendChild(document.createTextNode(' '));
+    });
+
+    function renderMeaningText() {
+      meaningBody.querySelectorAll('.ph').forEach(el => {
+        const s = SEG[+el.dataset.i];
+        el.innerHTML = (lang === 'hi' ? s.hi : s.en) + '<sup>' + marker(s) + '</sup>';
+      });
+    }
+
+    function renderWords() {
+      const s = SEG[cur];
+      wordBody.innerHTML = s.words.map(w => `
+        <div class="word">
+          <span class="w dev">${w.w}<small>${w.t}</small></span>
+          <span class="m">${lang === 'hi' ? w.hi : w.en}</span>
+        </div>`).join('');
+    }
+
+    function renderPic() {
+      const s = SEG[cur];
+      const img = document.getElementById('picImg');
+      const ph  = document.getElementById('picPh');
+      img.style.display = 'none'; ph.style.display = 'block';
+      img.onload  = () => { img.style.display = 'block'; ph.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none';  ph.style.display = 'block'; };
+      img.src = IMG_PREFIX + cur + '.png';
+      document.getElementById('picCap').textContent = (lang === 'hi') ? s.capHi : s.capEn;
+      document.getElementById('promptText').value = s.pic + " " + PIC_STYLE;
+    }
+
+    function select(i) {
+      cur = i;
+      [sutraBody, meaningBody].forEach(p => {
+        p.querySelectorAll('.ph').forEach(el => {
+          const on = (+el.dataset.i === i);
+          el.classList.toggle('active', on);
+          if (on) el.classList.remove('hl');
+        });
+      });
+      const a = sutraBody.querySelector('.ph[data-i="' + i + '"]');
+      const b = meaningBody.querySelector('.ph[data-i="' + i + '"]');
+      if (a) a.scrollIntoView({ block: 'nearest' });
+      if (b) b.scrollIntoView({ block: 'nearest' });
+      renderWords();
+      renderPic();
+      document.getElementById('prevBtn').disabled = (i === 0);
+      document.getElementById('nextBtn').disabled = (i === SEG.length - 1);
+    }
+
+    function setLang(l) {
+      lang = l;
+      document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
+      renderMeaningText(); renderWords(); renderPic();
+    }
+
+    // ---- events ----
+    document.getElementById('langToggle').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (b) setLang(b.dataset.lang);
+    });
+    document.getElementById('prevBtn').addEventListener('click', () => { if (cur > 0) select(cur - 1); });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (cur < SEG.length - 1) select(cur + 1); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  document.getElementById('prevBtn').click();
+      if (e.key === 'ArrowRight') document.getElementById('nextBtn').click();
+    });
+    document.getElementById('promptBtn').addEventListener('click', () => {
+      const box = document.getElementById('promptBox');
+      const showing = box.style.display === 'block';
+      box.style.display = showing ? 'none' : 'block';
+      if (!showing) {
+        const ta = document.getElementById('promptText');
+        ta.focus(); ta.select();
+        try { navigator.clipboard.writeText(ta.value); } catch (e) {}
+      }
+    });
+
+    // ---- init ----
+    renderMeaningText();
+    select(0);
+  </script>
+</body>
+</html>

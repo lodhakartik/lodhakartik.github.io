@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Tassa Uttarī · Pratikraman</title>
+  <meta name="description" content="Iriyavahiyam sutra recitation aid — full Prakrit paati, Hindi/English meaning, word-by-word, and pictorial meaning. Sthanakvasi. By Kartik Lodha." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&family=Patrick+Hand&family=Yatra+One&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --panel-bg:        #FFFBF0;
+      --hl:              #FFF3CD;
+      --shadow-soft: 0 2px 0 rgba(58,31,14,.08), 0 5px 14px rgba(58,31,14,.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(200,161,75,.16), transparent 42%),
+        radial-gradient(circle at 90% 100%, rgba(122,29,29,.10), transparent 42%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    .dev      { font-family: "Yatra One", "Mukta", serif; }
+    .dev-body { font-family: "Mukta", system-ui, sans-serif; }
+
+    /* ---------- slim top bar ---------- */
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      border-bottom: 1.5px solid var(--gold);
+      background: rgba(255,251,240,.7);
+      backdrop-filter: blur(4px);
+    }
+    .topbar .back { color: var(--maroon); font-weight: 700; text-decoration: none; font-size: .95rem; white-space: nowrap; }
+    .topbar .title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+    .topbar .title .dv { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.35rem; line-height: 1; }
+    .topbar .title .rom { color: var(--ink-soft); font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar .draft { font-size: .68rem; background: #FFF3CD; border: 1px dashed var(--gold-deep); color: var(--gold-deep); padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+    .spacer { flex: 1; }
+
+    /* language toggle */
+    .lang-toggle { display: inline-flex; border: 1.5px solid var(--maroon); border-radius: 999px; overflow: hidden; }
+    .lang-toggle button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .82rem;
+      border: none; background: #fff; color: var(--maroon);
+      padding: 5px 14px; cursor: pointer;
+    }
+    .lang-toggle button.on { background: var(--maroon); color: #fff; }
+
+    /* prev/next */
+    .nav-btns { display: inline-flex; gap: 6px; }
+    .nav-btns button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .95rem;
+      border: 1.5px solid var(--maroon); background: #fff; color: var(--maroon);
+      border-radius: 999px; width: 34px; height: 34px; cursor: pointer;
+    }
+    .nav-btns button:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ---------- 4-panel grid, fills remaining height ---------- */
+    .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      grid-template-rows: 1.15fr 1fr;
+      grid-template-areas:
+        "sutra   words"
+        "meaning pic";
+      gap: 12px;
+      padding: 12px 16px 14px;
+    }
+    .panel {
+      background: var(--panel-bg);
+      border: 1.5px solid var(--gold);
+      border-radius: 14px;
+      box-shadow: var(--shadow-soft);
+      padding: 24px 14px 12px;
+      position: relative;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel .label {
+      position: absolute; top: -10px; left: 14px;
+      background: var(--maroon); color: #fff;
+      font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 999px;
+    }
+    .panel .body { overflow-y: auto; min-height: 0; padding-right: 4px; }
+    #sutra   { grid-area: sutra; }
+    #meaning { grid-area: meaning; }
+    #words   { grid-area: words; }
+    #pic     { grid-area: pic; }
+
+    /* ---- Panels A & B: flowing paragraph with synced phrase-boxes ---- */
+    .para { margin: 0; }
+    #sutra .para   { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.24rem; line-height: 2.0; }
+    #meaning .para { font-family: "Mukta", sans-serif; color: var(--ink); font-size: 1.02rem; line-height: 1.95; }
+
+    .ph {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+      border: 1.5px solid transparent;   /* the box, transparent until synced */
+      transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+    .ph sup { font-family: "Mukta", sans-serif; font-size: .55em; color: var(--gold-deep); font-weight: 700; padding-left: 1px; vertical-align: super; }
+    /* hover-sync box (lighter) */
+    .ph.hl { background: rgba(200,161,75,.22); border-color: var(--gold-deep); }
+    /* selected box (stronger, persistent) */
+    .ph.active { background: var(--hl); border-color: var(--maroon); box-shadow: 0 0 0 1px var(--maroon); }
+
+    /* ---- Panel C: word-by-word ---- */
+    .word { display: grid; grid-template-columns: minmax(78px,auto) 1fr; gap: 10px; align-items: baseline; padding: 5px 4px; border-bottom: 1px dotted rgba(140,106,31,.32); }
+    .word:last-child { border-bottom: none; }
+    .word .w { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.04rem; }
+    .word .w small { display: block; font-family: "Mukta"; font-style: italic; color: var(--ink-soft); font-size: .68rem; }
+    .word .m { font-family: "Mukta", sans-serif; font-size: .92rem; color: var(--ink); }
+
+    /* ---- Panel D: pictorial meaning ---- */
+    #pic .body { align-items: center; text-align: center; display: flex; flex-direction: column; }
+    .pic-frame {
+      width: 100%; max-width: 240px; aspect-ratio: 4/3; margin: 0 auto 8px;
+      border: 2px dashed var(--gold); border-radius: 12px;
+      background: repeating-linear-gradient(45deg, #fff, #fff 10px, #FDF6E3 10px, #FDF6E3 20px);
+      display: grid; place-items: center; overflow: hidden; position: relative;
+    }
+    .pic-frame img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .pic-frame .ph { font-family: "Mukta"; color: var(--gold-deep); font-size: .8rem; padding: 8px; }
+    .pic-cap { font-family: "Mukta", sans-serif; font-size: .9rem; color: var(--ink-soft); margin-bottom: 8px; line-height: 1.4; }
+    .prompt-btn {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .8rem;
+      border: 1.5px solid var(--gold-deep); background: #fff; color: var(--gold-deep);
+      border-radius: 999px; padding: 5px 12px; cursor: pointer;
+    }
+    .prompt-btn:hover { background: var(--gold-deep); color: #fff; }
+    .prompt-box { display: none; margin-top: 8px; width: 100%; }
+    .prompt-box textarea {
+      width: 100%; height: 76px; font-family: "Mukta", sans-serif; font-size: .74rem;
+      border: 1px solid var(--gold); border-radius: 8px; padding: 6px; resize: none; color: var(--ink-soft);
+      background: #fffdf6;
+    }
+
+    /* ---------- responsive: allow scroll on small screens ---------- */
+    @media (max-width: 720px) {
+      body { height: auto; overflow: auto; }
+      .stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-template-areas: "sutra" "meaning" "words" "pic";
+      }
+      .panel { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="back" href="../index.html">&larr;</a>
+    <div class="title">
+      <span class="dv">तस्स उत्तरी</span>
+      <span class="rom">Tassa Uttarī · Sthānakvāsī</span>
+    </div>
+    <span class="draft">⚠ DRAFT</span>
+    <span class="spacer"></span>
+    <div class="nav-btns">
+      <button id="prevBtn" title="Previous line">&larr;</button>
+      <button id="nextBtn" title="Next line">&rarr;</button>
+    </div>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="hi" class="on">हिंदी</button>
+      <button data-lang="en">English</button>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- PANEL A: full Prakrit sutra (one paragraph) -->
+    <section class="panel" id="sutra">
+      <span class="label">A · मूल पाठ · Prākṛt</span>
+      <div class="body"><p class="para dev" id="sutraBody"></p></div>
+    </section>
+
+    <!-- PANEL C: word-by-word -->
+    <section class="panel" id="words">
+      <span class="label">C · शब्दार्थ · Words</span>
+      <div class="body" id="wordBody"></div>
+    </section>
+
+    <!-- PANEL B: full meaning (one paragraph, synced boxes) -->
+    <section class="panel" id="meaning">
+      <span class="label" id="meaningLabel">B · अर्थ · Meaning</span>
+      <div class="body"><p class="para" id="meaningBody"></p></div>
+    </section>
+
+    <!-- PANEL D: pictorial meaning -->
+    <section class="panel" id="pic">
+      <span class="label">D · चित्र-अर्थ · Pictorial</span>
+      <div class="body">
+        <div class="pic-frame">
+          <img id="picImg" alt="pictorial meaning" />
+          <span class="ph" id="picPh">चित्र यहाँ आएगा<br><small>(image will load here)</small></span>
+        </div>
+        <div class="pic-cap dev-body" id="picCap"></div>
+        <button class="prompt-btn" id="promptBtn">🎨 Image prompt</button>
+        <div class="prompt-box" id="promptBox">
+          <textarea id="promptText" readonly></textarea>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ============================================================
+    //  DRAFT content — Tassa Uttarī (Sthānakvāsī).  VERIFY before publishing.
+    //  Sources: jainknowledge.com, lokdayro.com, jinavachan (Tassa Uttarī sūtra).
+    //  Each line drives all 4 panels. Meanings carry {hi, en}.
+    // ============================================================
+    const SEG = [
+      {
+        n: 1,
+        prakrit: "तस्स उत्तरीकरणेणं,",
+        rom: "Tassa uttarīkaraṇeṇaṁ,",
+        hi: "उस (अभी-अभी किए गए इर्यापथ-आलोचन) की और अधिक शुद्धि / उन्नति के लिए,",
+        en: "For the further betterment / elevation of that (the conduct just reviewed),",
+        words: [
+          { w: "तस्स",         t: "tassa",          hi: "उसकी (इर्यापथ की)", en: "of that (the conduct)" },
+          { w: "उत्तरीकरणेणं", t: "uttarīkaraṇeṇaṁ", hi: "और उन्नत / उत्तम बनाने से", en: "by further improving / elevating" }
+        ],
+        pic: "A single Jain devotee in plain white clothes standing upright and still in kausagga posture, arms hanging loosely, eyes gently lowered, on a bare simple floor, with a soft warm rising light behind them suggesting inner elevation and betterment of the soul. A white muhpatti and a soft woolen rajoharan whisk rest respectfully nearby. Serene, aspiring mood. No idols, no temple.",
+        capHi: "आत्मा की और अधिक शुद्धि — उन्नति के लिए।",
+        capEn: "For the further elevation and betterment of the soul."
+      },
+      {
+        n: 2,
+        prakrit: "पायच्छित्तकरणेणं,",
+        rom: "Pāyacchittakaraṇeṇaṁ,",
+        hi: "प्रायश्चित्त (पश्चात्ताप व दंड द्वारा दोष-शुद्धि) करने के द्वारा,",
+        en: "by way of atonement / penance (prāyaścitta),",
+        words: [
+          { w: "पायच्छित्त",  t: "pāyacchitta",     hi: "प्रायश्चित्त / पश्चात्ताप", en: "atonement / penance" },
+          { w: "करणेणं",      t: "karaṇeṇaṁ",       hi: "करने के द्वारा", en: "by way of doing" }
+        ],
+        pic: "A Jain devotee in white kneeling with folded hands and a bowed head in sincere penance and remorse, a warm gentle golden light of atonement surrounding them and softly dissolving faint grey shadows of past faults. A muhpatti and rajoharan whisk rest nearby. Quiet, heartfelt, repentant mood. No idols, no temple.",
+        capHi: "प्रायश्चित्त — पश्चात्ताप से दोष-शुद्धि।",
+        capEn: "Atonement — cleansing faults through penance."
+      },
+      {
+        n: 3,
+        prakrit: "विसोहीकरणेणं,",
+        rom: "Visohīkaraṇeṇaṁ,",
+        hi: "विशुद्धि (आत्मा को निर्मल-स्वच्छ) करने के द्वारा,",
+        en: "by way of purification (vishuddhi) of the soul,",
+        words: [
+          { w: "विसोही",  t: "visohī",     hi: "विशुद्धि / निर्मलता", en: "purification / cleansing" },
+          { w: "करणेणं",  t: "karaṇeṇaṁ",  hi: "करने के द्वारा", en: "by way of doing" }
+        ],
+        pic: "A Jain devotee in white standing calmly and upright, bathed in clear soft radiant light, faint dark wisps of impurity gently lifting away and dissolving into the bright warm glow around them, leaving an atmosphere of clarity and inner cleanliness. A muhpatti and rajoharan whisk rest nearby. Pure, luminous, serene mood. No idols, no temple.",
+        capHi: "विशुद्धि — आत्मा की निर्मलता।",
+        capEn: "Purification — cleansing the soul."
+      },
+      {
+        n: 4,
+        prakrit: "विसल्लीकरणेणं,",
+        rom: "Visallīkaraṇeṇaṁ,",
+        hi: "शल्यों (माया, निदान/तीव्र इच्छा, मिथ्यात्व रूपी काँटों) को निकालने के द्वारा,",
+        en: "by removing the inner thorns / darts (of deceit, craving and wrong belief),",
+        words: [
+          { w: "विसल्ली",  t: "visallī",    hi: "शल्य (काँटे) निकालना", en: "removing the thorns/darts" },
+          { w: "करणेणं",  t: "karaṇeṇaṁ",  hi: "करने के द्वारा", en: "by way of doing" }
+        ],
+        pic: "A Jain devotee in white standing upright and composed as three faint dark thorn-like darts (representing deceit, craving and wrong belief) are gently drawn out from near the heart and dissolve into warm light, leaving the chest clear and at peace. A muhpatti and rajoharan whisk rest nearby. Relieved, cleansed, tender mood. No idols, no temple.",
+        capHi: "अंतर के शल्य-काँटे निकालना।",
+        capEn: "Removing the inner thorns of the soul."
+      },
+      {
+        n: 5,
+        prakrit: "पावाणं कम्माणं निग्घायणट्ठाए,",
+        rom: "Pāvāṇaṁ kammāṇaṁ nigghāyaṇaṭṭhāe,",
+        hi: "पापकर्मों को (जड़ से) नष्ट करने के प्रयोजन से,",
+        en: "for the purpose of destroying (uprooting) sinful karmas,",
+        words: [
+          { w: "पावाणं",       t: "pāvāṇaṁ",         hi: "पापों के", en: "of sins" },
+          { w: "कम्माणं",      t: "kammāṇaṁ",        hi: "कर्मों के", en: "of karmas" },
+          { w: "निग्घायणट्ठाए", t: "nigghāyaṇaṭṭhāe", hi: "नाश (उन्मूलन) के लिए", en: "for the purpose of destroying" }
+        ],
+        pic: "A Jain devotee in white standing steady and resolute, faint dark clinging wisps and clusters of sinful karma around them breaking apart and dissolving into strong warm golden light, an atmosphere of firm inner resolve and freedom. A muhpatti and rajoharan whisk rest nearby. Determined, liberating, uplifting mood. No idols, no temple.",
+        capHi: "पापकर्मों का नाश करने के लिए।",
+        capEn: "In order to destroy sinful karmas."
+      },
+      {
+        n: 6,
+        prakrit: "ठामि काउस्सग्गं।",
+        rom: "Ṭhāmi kāussaggaṁ.",
+        hi: "मैं कायोत्सर्ग (शरीर के प्रति ममत्व त्यागकर स्थिर ध्यान) में स्थित होता हूँ।",
+        en: "I now stand in kāyotsarga (motionless meditative abandonment of the body).",
+        words: [
+          { w: "ठामि",       t: "ṭhāmi",       hi: "मैं स्थित होता हूँ", en: "I stand / I stay" },
+          { w: "काउस्सग्गं", t: "kāussaggaṁ",  hi: "कायोत्सर्ग में", en: "in kāyotsarga (still meditation)" }
+        ],
+        pic: "A single Jain devotee in plain white clothes standing perfectly upright and motionless in kausagga posture, arms hanging straight and loose at the sides, feet slightly apart, eyes softly lowered, face calm and inward, on a bare simple floor with soft even warm light. A white muhpatti and a soft woolen rajoharan whisk rest respectfully nearby. Deep stillness, meditative peace, total absorption. No idols, no temple.",
+        capHi: "मैं कायोत्सर्ग में स्थिर खड़ा होता हूँ।",
+        capEn: "I stand still in kausagga meditation."
+      }
+    ];
+
+    const IMG_PREFIX = "img/tassauttari-";   // drop img/tassauttari-0.png ... -6.png to fill Panel D
+
+    // Shared render style + Sthanakvasi guardrails, appended to every image prompt.
+    const PIC_STYLE = "Rendered as a hand-drawn COLORED-PENCIL SKETCH: visible pencil strokes and paper tooth, soft layered shading, delicate line work, warm gentle earthy palette (cream, ochre-gold, deep maroon, muted sage green, soft browns) on an aged parchment-cream background. Serene, tender, devotional Jain mood. Sthanakvasi tradition — strictly aniconic: NO idols, murtis or ornate temple; any monk/nun wears plain white cloth with a white muhpatti (mouth-cloth) and holds a soft woolen rajoharan whisk; laypeople in simple modest clothes. No text, no lettering, no logos. 4:3 composition, gentle soft lighting.";
+    let cur = 0;
+    let lang = "hi";
+
+    const sutraBody   = document.getElementById('sutraBody');
+    const meaningBody = document.getElementById('meaningBody');
+    const wordBody    = document.getElementById('wordBody');
+
+    // ---- build Panel A (full sutra) & Panel B (full meaning) as paragraphs of phrase-spans ----
+    function marker(s) { return (s.n === "◈") ? "◈" : s.n; }
+
+    function hoverSync(i, on) {
+      [sutraBody, meaningBody].forEach(p => {
+        const el = p.querySelector('.ph[data-i="' + i + '"]');
+        if (el && !el.classList.contains('active')) el.classList.toggle('hl', on);
+      });
+    }
+
+    SEG.forEach((s, i) => {
+      const a = document.createElement('span');
+      a.className = 'ph'; a.dataset.i = i;
+      a.innerHTML = s.prakrit + '<sup>' + marker(s) + '</sup>';
+
+      const b = document.createElement('span');
+      b.className = 'ph'; b.dataset.i = i;   // meaning text filled by renderMeaningText()
+
+      [a, b].forEach(el => {
+        el.addEventListener('mouseenter', () => hoverSync(i, true));
+        el.addEventListener('mouseleave', () => hoverSync(i, false));
+        el.addEventListener('click', () => select(i));
+      });
+
+      sutraBody.appendChild(a);   sutraBody.appendChild(document.createTextNode(' '));
+      meaningBody.appendChild(b); meaningBody.appendChild(document.createTextNode(' '));
+    });
+
+    function renderMeaningText() {
+      meaningBody.querySelectorAll('.ph').forEach(el => {
+        const s = SEG[+el.dataset.i];
+        el.innerHTML = (lang === 'hi' ? s.hi : s.en) + '<sup>' + marker(s) + '</sup>';
+      });
+    }
+
+    function renderWords() {
+      const s = SEG[cur];
+      wordBody.innerHTML = s.words.map(w => `
+        <div class="word">
+          <span class="w dev">${w.w}<small>${w.t}</small></span>
+          <span class="m">${lang === 'hi' ? w.hi : w.en}</span>
+        </div>`).join('');
+    }
+
+    function renderPic() {
+      const s = SEG[cur];
+      const img = document.getElementById('picImg');
+      const ph  = document.getElementById('picPh');
+      img.style.display = 'none'; ph.style.display = 'block';
+      img.onload  = () => { img.style.display = 'block'; ph.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none';  ph.style.display = 'block'; };
+      img.src = IMG_PREFIX + cur + '.png';
+      document.getElementById('picCap').textContent = (lang === 'hi') ? s.capHi : s.capEn;
+      document.getElementById('promptText').value = s.pic + " " + PIC_STYLE;
+    }
+
+    function select(i) {
+      cur = i;
+      [sutraBody, meaningBody].forEach(p => {
+        p.querySelectorAll('.ph').forEach(el => {
+          const on = (+el.dataset.i === i);
+          el.classList.toggle('active', on);
+          if (on) el.classList.remove('hl');
+        });
+      });
+      const a = sutraBody.querySelector('.ph[data-i="' + i + '"]');
+      const b = meaningBody.querySelector('.ph[data-i="' + i + '"]');
+      if (a) a.scrollIntoView({ block: 'nearest' });
+      if (b) b.scrollIntoView({ block: 'nearest' });
+      renderWords();
+      renderPic();
+      document.getElementById('prevBtn').disabled = (i === 0);
+      document.getElementById('nextBtn').disabled = (i === SEG.length - 1);
+    }
+
+    function setLang(l) {
+      lang = l;
+      document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
+      renderMeaningText(); renderWords(); renderPic();
+    }
+
+    // ---- events ----
+    document.getElementById('langToggle').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (b) setLang(b.dataset.lang);
+    });
+    document.getElementById('prevBtn').addEventListener('click', () => { if (cur > 0) select(cur - 1); });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (cur < SEG.length - 1) select(cur + 1); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  document.getElementById('prevBtn').click();
+      if (e.key === 'ArrowRight') document.getElementById('nextBtn').click();
+    });
+    document.getElementById('promptBtn').addEventListener('click', () => {
+      const box = document.getElementById('promptBox');
+      const showing = box.style.display === 'block';
+      box.style.display = showing ? 'none' : 'block';
+      if (!showing) {
+        const ta = document.getElementById('promptText');
+        ta.focus(); ta.select();
+        try { navigator.clipboard.writeText(ta.value); } catch (e) {}
+      }
+    });
+
+    // ---- init ----
+    renderMeaningText();
+    select(0);
+  </script>
+</body>
+</html>

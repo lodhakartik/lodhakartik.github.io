@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Chattāri Maṅgalaṁ · Pratikraman</title>
+  <meta name="description" content="Iriyavahiyam sutra recitation aid — full Prakrit paati, Hindi/English meaning, word-by-word, and pictorial meaning. Sthanakvasi. By Kartik Lodha." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&family=Patrick+Hand&family=Yatra+One&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --panel-bg:        #FFFBF0;
+      --hl:              #FFF3CD;
+      --shadow-soft: 0 2px 0 rgba(58,31,14,.08), 0 5px 14px rgba(58,31,14,.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(200,161,75,.16), transparent 42%),
+        radial-gradient(circle at 90% 100%, rgba(122,29,29,.10), transparent 42%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    .dev      { font-family: "Yatra One", "Mukta", serif; }
+    .dev-body { font-family: "Mukta", system-ui, sans-serif; }
+
+    /* ---------- slim top bar ---------- */
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      border-bottom: 1.5px solid var(--gold);
+      background: rgba(255,251,240,.7);
+      backdrop-filter: blur(4px);
+    }
+    .topbar .back { color: var(--maroon); font-weight: 700; text-decoration: none; font-size: .95rem; white-space: nowrap; }
+    .topbar .title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+    .topbar .title .dv { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.35rem; line-height: 1; }
+    .topbar .title .rom { color: var(--ink-soft); font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar .draft { font-size: .68rem; background: #FFF3CD; border: 1px dashed var(--gold-deep); color: var(--gold-deep); padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+    .spacer { flex: 1; }
+
+    /* language toggle */
+    .lang-toggle { display: inline-flex; border: 1.5px solid var(--maroon); border-radius: 999px; overflow: hidden; }
+    .lang-toggle button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .82rem;
+      border: none; background: #fff; color: var(--maroon);
+      padding: 5px 14px; cursor: pointer;
+    }
+    .lang-toggle button.on { background: var(--maroon); color: #fff; }
+
+    /* prev/next */
+    .nav-btns { display: inline-flex; gap: 6px; }
+    .nav-btns button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .95rem;
+      border: 1.5px solid var(--maroon); background: #fff; color: var(--maroon);
+      border-radius: 999px; width: 34px; height: 34px; cursor: pointer;
+    }
+    .nav-btns button:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ---------- 4-panel grid, fills remaining height ---------- */
+    .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      grid-template-rows: 1.15fr 1fr;
+      grid-template-areas:
+        "sutra   words"
+        "meaning pic";
+      gap: 12px;
+      padding: 12px 16px 14px;
+    }
+    .panel {
+      background: var(--panel-bg);
+      border: 1.5px solid var(--gold);
+      border-radius: 14px;
+      box-shadow: var(--shadow-soft);
+      padding: 24px 14px 12px;
+      position: relative;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel .label {
+      position: absolute; top: -10px; left: 14px;
+      background: var(--maroon); color: #fff;
+      font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 999px;
+    }
+    .panel .body { overflow-y: auto; min-height: 0; padding-right: 4px; }
+    #sutra   { grid-area: sutra; }
+    #meaning { grid-area: meaning; }
+    #words   { grid-area: words; }
+    #pic     { grid-area: pic; }
+
+    /* ---- Panels A & B: flowing paragraph with synced phrase-boxes ---- */
+    .para { margin: 0; }
+    #sutra .para   { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.24rem; line-height: 2.0; }
+    #meaning .para { font-family: "Mukta", sans-serif; color: var(--ink); font-size: 1.02rem; line-height: 1.95; }
+
+    .ph {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+      border: 1.5px solid transparent;   /* the box, transparent until synced */
+      transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+    .ph sup { font-family: "Mukta", sans-serif; font-size: .55em; color: var(--gold-deep); font-weight: 700; padding-left: 1px; vertical-align: super; }
+    /* hover-sync box (lighter) */
+    .ph.hl { background: rgba(200,161,75,.22); border-color: var(--gold-deep); }
+    /* selected box (stronger, persistent) */
+    .ph.active { background: var(--hl); border-color: var(--maroon); box-shadow: 0 0 0 1px var(--maroon); }
+
+    /* ---- Panel C: word-by-word ---- */
+    .word { display: grid; grid-template-columns: minmax(78px,auto) 1fr; gap: 10px; align-items: baseline; padding: 5px 4px; border-bottom: 1px dotted rgba(140,106,31,.32); }
+    .word:last-child { border-bottom: none; }
+    .word .w { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.04rem; }
+    .word .w small { display: block; font-family: "Mukta"; font-style: italic; color: var(--ink-soft); font-size: .68rem; }
+    .word .m { font-family: "Mukta", sans-serif; font-size: .92rem; color: var(--ink); }
+
+    /* ---- Panel D: pictorial meaning ---- */
+    #pic .body { align-items: center; text-align: center; display: flex; flex-direction: column; }
+    .pic-frame {
+      width: 100%; max-width: 240px; aspect-ratio: 4/3; margin: 0 auto 8px;
+      border: 2px dashed var(--gold); border-radius: 12px;
+      background: repeating-linear-gradient(45deg, #fff, #fff 10px, #FDF6E3 10px, #FDF6E3 20px);
+      display: grid; place-items: center; overflow: hidden; position: relative;
+    }
+    .pic-frame img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .pic-frame .ph { font-family: "Mukta"; color: var(--gold-deep); font-size: .8rem; padding: 8px; }
+    .pic-cap { font-family: "Mukta", sans-serif; font-size: .9rem; color: var(--ink-soft); margin-bottom: 8px; line-height: 1.4; }
+    .prompt-btn {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .8rem;
+      border: 1.5px solid var(--gold-deep); background: #fff; color: var(--gold-deep);
+      border-radius: 999px; padding: 5px 12px; cursor: pointer;
+    }
+    .prompt-btn:hover { background: var(--gold-deep); color: #fff; }
+    .prompt-box { display: none; margin-top: 8px; width: 100%; }
+    .prompt-box textarea {
+      width: 100%; height: 76px; font-family: "Mukta", sans-serif; font-size: .74rem;
+      border: 1px solid var(--gold); border-radius: 8px; padding: 6px; resize: none; color: var(--ink-soft);
+      background: #fffdf6;
+    }
+
+    /* ---------- responsive: allow scroll on small screens ---------- */
+    @media (max-width: 720px) {
+      body { height: auto; overflow: auto; }
+      .stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-template-areas: "sutra" "meaning" "words" "pic";
+      }
+      .panel { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="back" href="../index.html">&larr;</a>
+    <div class="title">
+      <span class="dv">चत्तारि मंगलं</span>
+      <span class="rom">Chattāri Maṅgalaṁ · Four-fold Refuge · Sthānakvāsī</span>
+    </div>
+    <span class="draft">⚠ DRAFT</span>
+    <span class="spacer"></span>
+    <div class="nav-btns">
+      <button id="prevBtn" title="Previous line">&larr;</button>
+      <button id="nextBtn" title="Next line">&rarr;</button>
+    </div>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="hi" class="on">हिंदी</button>
+      <button data-lang="en">English</button>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- PANEL A: full Prakrit sutra (one paragraph) -->
+    <section class="panel" id="sutra">
+      <span class="label">A · मूल पाठ · Prākṛt</span>
+      <div class="body"><p class="para dev" id="sutraBody"></p></div>
+    </section>
+
+    <!-- PANEL C: word-by-word -->
+    <section class="panel" id="words">
+      <span class="label">C · शब्दार्थ · Words</span>
+      <div class="body" id="wordBody"></div>
+    </section>
+
+    <!-- PANEL B: full meaning (one paragraph, synced boxes) -->
+    <section class="panel" id="meaning">
+      <span class="label" id="meaningLabel">B · अर्थ · Meaning</span>
+      <div class="body"><p class="para" id="meaningBody"></p></div>
+    </section>
+
+    <!-- PANEL D: pictorial meaning -->
+    <section class="panel" id="pic">
+      <span class="label">D · चित्र-अर्थ · Pictorial</span>
+      <div class="body">
+        <div class="pic-frame">
+          <img id="picImg" alt="pictorial meaning" />
+          <span class="ph" id="picPh">चित्र यहाँ आएगा<br><small>(image will load here)</small></span>
+        </div>
+        <div class="pic-cap dev-body" id="picCap"></div>
+        <button class="prompt-btn" id="promptBtn">🎨 Image prompt</button>
+        <div class="prompt-box" id="promptBox">
+          <textarea id="promptText" readonly></textarea>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ============================================================
+    //  DRAFT content — Chattāri Maṅgalaṁ (Sthānakvāsī).  VERIFY before publishing.
+    //  The four-fold auspiciousness / supremacy / refuge formula.
+    //  Each line drives all 4 panels. Meanings carry {hi, en}.
+    // ============================================================
+    const SEG = [
+      {
+        n: 1,
+        prakrit: "चत्तारि मंगलं —",
+        rom: "Chattāri maṅgalaṁ —",
+        hi: "चार मंगल (कल्याणकारी) हैं —",
+        en: "Four are auspicious —",
+        words: [
+          { w: "चत्तारि", t: "chattāri", hi: "चार", en: "four" },
+          { w: "मंगलं",   t: "maṅgalaṁ", hi: "मंगल / कल्याणकारी", en: "auspicious / bringing welfare" }
+        ],
+        pic: "A warm parchment scene with four soft radiant points of golden light arranged gently around a glowing central emblem of auspiciousness (a soft swastik-like sign of light, not carved), suggesting the four-fold blessing. No figures, only tender warm light on cream paper. No idols, no temple.",
+        capHi: "चार परम मंगल।",
+        capEn: "The four supreme auspicious ones."
+      },
+      {
+        n: 2,
+        prakrit: "अरिहंता मंगलं,",
+        rom: "Arihantā maṅgalaṁ,",
+        hi: "अरिहंत मंगल हैं,",
+        en: "the Arihantas are auspicious,",
+        words: [
+          { w: "अरिहंता", t: "arihantā", hi: "अरिहंत (राग-द्वेष रूपी शत्रु जीतने वाले)", en: "Arihants (conquerors of inner foes)" },
+          { w: "मंगलं",   t: "maṅgalaṁ", hi: "मंगल हैं", en: "are auspicious" }
+        ],
+        pic: "A living awakened teacher, a serene Arihant shown as a calm seated sage with a soft warm halo of light around the head, eyes gently lowered in deep peace, radiating compassion. Depicted as a living luminous teacher, never a statue. Warm glow on parchment-cream ground. No idols, no temple.",
+        capHi: "अरिहंत — जीवित प्रबुद्ध गुरु।",
+        capEn: "Arihants — living awakened teachers."
+      },
+      {
+        n: 3,
+        prakrit: "सिद्धा मंगलं,",
+        rom: "Siddhā maṅgalaṁ,",
+        hi: "सिद्ध मंगल हैं,",
+        en: "the Siddhas are auspicious,",
+        words: [
+          { w: "सिद्धा", t: "siddhā", hi: "सिद्ध (मुक्त आत्माएँ)", en: "Siddhas (liberated souls)" },
+          { w: "मंगलं",  t: "maṅgalaṁ", hi: "मंगल हैं", en: "are auspicious" }
+        ],
+        pic: "Formless glowing orbs of pure light floating gently near the top of the frame, softly luminous silhouettes of light without any face or body, suggesting liberated formless souls at the summit of the universe. Only radiant light, never figures. Serene warm glow on parchment-cream. No idols, no temple.",
+        capHi: "सिद्ध — निराकार ज्योति-स्वरूप मुक्त आत्माएँ।",
+        capEn: "Siddhas — formless souls of pure light."
+      },
+      {
+        n: 4,
+        prakrit: "साहू मंगलं,",
+        rom: "Sāhū maṅgalaṁ,",
+        hi: "साधु मंगल हैं,",
+        en: "the Sadhus (ascetics) are auspicious,",
+        words: [
+          { w: "साहू",   t: "sāhū", hi: "साधु (श्रमण मुनि)", en: "Sadhus (ascetics)" },
+          { w: "मंगलं", t: "maṅgalaṁ", hi: "मंगल हैं", en: "are auspicious" }
+        ],
+        pic: "A serene Sthanakvasi sadhu (monk) in plain white cloth with a white muhpatti (mouth-cloth) and a soft woolen rajoharan whisk, seated calmly in a bare simple space, a gentle faint glow of virtue around him, embodying restraint and compassion. Living monk, warm light on parchment-cream. No idols, no temple.",
+        capHi: "साधु — श्वेत वस्त्र, मुहपत्ति, रजोहरण।",
+        capEn: "Sadhus — white cloth, muhpatti, rajoharan."
+      },
+      {
+        n: 5,
+        prakrit: "केवलिपन्नत्तो धम्मो मंगलं।",
+        rom: "Kevali-pannatto dhammo maṅgalaṁ.",
+        hi: "और केवलियों (सर्वज्ञों) द्वारा प्ररूपित धर्म मंगल है।",
+        en: "and the Dharma proclaimed by the Kevalis (omniscient ones) is auspicious.",
+        words: [
+          { w: "केवलि",       t: "kevali", hi: "केवली / सर्वज्ञ", en: "Kevalis / omniscient ones" },
+          { w: "पन्नत्तो",     t: "pannatto", hi: "प्ररूपित / उपदिष्ट", en: "proclaimed / expounded" },
+          { w: "धम्मो",       t: "dhammo", hi: "धर्म", en: "the Dharma" },
+          { w: "मंगलं",       t: "maṅgalaṁ", hi: "मंगल है", en: "is auspicious" }
+        ],
+        pic: "An open radiant scripture / palm-leaf manuscript resting on a simple wooden stand, glowing with warm golden light streaming from its pages, symbolising the Dharma proclaimed by the omniscient. Only warm radiant light and the open book on a parchment-cream ground, no figures. No idols, no temple.",
+        capHi: "सर्वज्ञ-प्ररूपित धर्म — दीप्तिमान ज्ञान।",
+        capEn: "The Dharma of the omniscient — radiant knowledge."
+      },
+      {
+        n: 6,
+        prakrit: "चत्तारि लोगुत्तमा —",
+        rom: "Chattāri loguttamā —",
+        hi: "चार लोक में उत्तम (सर्वश्रेष्ठ) हैं —",
+        en: "Four are supreme in the world —",
+        words: [
+          { w: "चत्तारि",   t: "chattāri", hi: "चार", en: "four" },
+          { w: "लोगुत्तमा", t: "loguttamā", hi: "लोक में उत्तम / सर्वश्रेष्ठ", en: "supreme in the world" }
+        ],
+        pic: "A wide warm parchment vista of the whole world below, with four soft luminous points of light rising highest above everything else, clearly the loftiest and most supreme lights in the cosmos. Only gentle light and open space, no figures. No idols, no temple.",
+        capHi: "चार लोकोत्तम।",
+        capEn: "The four supreme in the world."
+      },
+      {
+        n: 7,
+        prakrit: "अरिहंता लोगुत्तमा,",
+        rom: "Arihantā loguttamā,",
+        hi: "अरिहंत लोकोत्तम हैं,",
+        en: "the Arihantas are supreme in the world,",
+        words: [
+          { w: "अरिहंता",   t: "arihantā", hi: "अरिहंत", en: "the Arihants" },
+          { w: "लोगुत्तमा", t: "loguttamā", hi: "लोक में उत्तम हैं", en: "are supreme in the world" }
+        ],
+        pic: "A living awakened Arihant teacher shown seated serenely with a soft warm halo, gently elevated and radiant above a soft suggestion of the world below, the highest and noblest being. Living luminous teacher, never a statue. Warm glow on parchment-cream. No idols, no temple.",
+        capHi: "अरिहंत — लोक में सर्वोच्च गुरु।",
+        capEn: "Arihants — noblest in the world."
+      },
+      {
+        n: 8,
+        prakrit: "सिद्धा लोगुत्तमा,",
+        rom: "Siddhā loguttamā,",
+        hi: "सिद्ध लोकोत्तम हैं,",
+        en: "the Siddhas are supreme in the world,",
+        words: [
+          { w: "सिद्धा",     t: "siddhā", hi: "सिद्ध", en: "the Siddhas" },
+          { w: "लोगुत्तमा", t: "loguttamā", hi: "लोक में उत्तम हैं", en: "are supreme in the world" }
+        ],
+        pic: "Formless glowing orbs of pure light resting at the very summit of the universe, at the highest point of a soft luminous arc, silhouettes of light without face or body, the supreme liberated souls above all realms. Only radiant light, never figures. Parchment-cream ground. No idols, no temple.",
+        capHi: "सिद्ध — लोक-शिखर पर विराजित ज्योति।",
+        capEn: "Siddhas — light at the summit of the cosmos."
+      },
+      {
+        n: 9,
+        prakrit: "साहू लोगुत्तमा,",
+        rom: "Sāhū loguttamā,",
+        hi: "साधु लोकोत्तम हैं,",
+        en: "the Sadhus (ascetics) are supreme in the world,",
+        words: [
+          { w: "साहू",       t: "sāhū", hi: "साधु", en: "the Sadhus" },
+          { w: "लोगुत्तमा", t: "loguttamā", hi: "लोक में उत्तम हैं", en: "are supreme in the world" }
+        ],
+        pic: "A serene Sthanakvasi sadhu in plain white cloth with a white muhpatti and a soft woolen rajoharan whisk, standing calmly and radiant with quiet virtue, honoured as the noblest of human beings, a soft glow of respect around him. Living monk, warm light on parchment-cream. No idols, no temple.",
+        capHi: "साधु — मनुष्यों में सर्वश्रेष्ठ।",
+        capEn: "Sadhus — noblest among humans."
+      },
+      {
+        n: 10,
+        prakrit: "केवलिपन्नत्तो धम्मो लोगुत्तमा।",
+        rom: "Kevali-pannatto dhammo loguttamā.",
+        hi: "और केवली-प्ररूपित धर्म लोकोत्तम है।",
+        en: "and the Dharma proclaimed by the Kevalis is supreme in the world.",
+        words: [
+          { w: "केवलि",    t: "kevali", hi: "केवली / सर्वज्ञ", en: "the omniscient" },
+          { w: "पन्नत्तो",  t: "pannatto", hi: "प्ररूपित", en: "proclaimed" },
+          { w: "धम्मो",    t: "dhammo", hi: "धर्म", en: "the Dharma" },
+          { w: "लोगुत्तमा", t: "loguttamā", hi: "लोक में उत्तम है", en: "is supreme in the world" }
+        ],
+        pic: "An open radiant scripture glowing with warm golden light, lifted highest above a soft suggestion of the world, its light spreading over everything as the supreme guiding path. Only the open glowing book and warm light on parchment-cream, no figures. No idols, no temple.",
+        capHi: "केवली-धर्म — सर्वश्रेष्ठ मार्ग।",
+        capEn: "The Kevalis' Dharma — the supreme path."
+      },
+      {
+        n: 11,
+        prakrit: "चत्तारि सरणं पवज्जामि —",
+        rom: "Chattāri saraṇaṁ pavajjāmi —",
+        hi: "मैं चार की शरण ग्रहण करता हूँ —",
+        en: "I take refuge in the four —",
+        words: [
+          { w: "चत्तारि",  t: "chattāri", hi: "चार", en: "four" },
+          { w: "सरणं",    t: "saraṇaṁ", hi: "शरण", en: "refuge / shelter" },
+          { w: "पवज्जामि", t: "pavajjāmi", hi: "मैं ग्रहण करता हूँ", en: "I take up / accept" }
+        ],
+        pic: "A simple lay devotee in modest clothes kneeling with palms joined and head gently bowed, surrounded protectively by four soft points of warm golden light, taking heartfelt refuge. Only the devotee and gentle light on parchment-cream ground. No idols, no temple.",
+        capHi: "चारों की शरण।",
+        capEn: "Taking refuge in the four."
+      },
+      {
+        n: 12,
+        prakrit: "अरिहंते सरणं पवज्जामि, सिद्धे सरणं पवज्जामि, साहू सरणं पवज्जामि, केवलिपन्नत्तं धम्मं सरणं पवज्जामि।",
+        rom: "Arihante saraṇaṁ pavajjāmi, siddhe saraṇaṁ pavajjāmi, sāhū saraṇaṁ pavajjāmi, kevali-pannattaṁ dhammaṁ saraṇaṁ pavajjāmi.",
+        hi: "मैं अरिहंतों की शरण लेता हूँ, सिद्धों की शरण लेता हूँ, साधुओं की शरण लेता हूँ, और केवली-प्ररूपित धर्म की शरण लेता हूँ।",
+        en: "I take refuge in the Arihantas, I take refuge in the Siddhas, I take refuge in the Sadhus, and I take refuge in the Dharma proclaimed by the Kevalis.",
+        words: [
+          { w: "अरिहंते", t: "arihante", hi: "अरिहंतों की", en: "in the Arihants" },
+          { w: "सिद्धे",   t: "siddhe", hi: "सिद्धों की", en: "in the Siddhas" },
+          { w: "साहू",     t: "sāhū", hi: "साधुओं की", en: "in the Sadhus" },
+          { w: "केवलिपन्नत्तं धम्मं", t: "kevali-pannattaṁ dhammaṁ", hi: "केवली-प्ररूपित धर्म की", en: "in the Kevalis' Dharma" },
+          { w: "सरणं",    t: "saraṇaṁ", hi: "शरण", en: "refuge" },
+          { w: "पवज्जामि", t: "pavajjāmi", hi: "मैं ग्रहण करता हूँ", en: "I take up" }
+        ],
+        pic: "A simple lay devotee in modest clothes kneeling in deep heartfelt surrender with folded hands, gently held within four sources of warm light together: a living awakened teacher with a soft halo, a formless glowing orb of light, a serene monk in white with muhpatti and rajoharan, and an open radiant scripture. All four surround and shelter the devotee in warm golden light. Living beings and light only, never statues. Parchment-cream ground. No idols, no temple.",
+        capHi: "अरिहंत, सिद्ध, साधु और धर्म की शरण।",
+        capEn: "Refuge in Arihants, Siddhas, Sadhus and Dharma."
+      }
+    ];
+
+    const IMG_PREFIX = "img/chattari-";   // drop img/iriyavahiyam-0.png ... -6.png to fill Panel D
+
+    // Shared render style + Sthanakvasi guardrails, appended to every image prompt.
+    const PIC_STYLE = "Rendered as a hand-drawn COLORED-PENCIL SKETCH: visible pencil strokes and paper tooth, soft layered shading, delicate line work, warm gentle earthy palette (cream, ochre-gold, deep maroon, muted sage green, soft browns) on an aged parchment-cream background. Serene, tender, devotional Jain mood. Sthanakvasi tradition — strictly aniconic: NO idols, murtis or ornate temple; any monk/nun wears plain white cloth with a white muhpatti (mouth-cloth) and holds a soft woolen rajoharan whisk; laypeople in simple modest clothes. No text, no lettering, no logos. 4:3 composition, gentle soft lighting.";
+    let cur = 0;
+    let lang = "hi";
+
+    const sutraBody   = document.getElementById('sutraBody');
+    const meaningBody = document.getElementById('meaningBody');
+    const wordBody    = document.getElementById('wordBody');
+
+    // ---- build Panel A (full sutra) & Panel B (full meaning) as paragraphs of phrase-spans ----
+    function marker(s) { return (s.n === "◈") ? "◈" : s.n; }
+
+    function hoverSync(i, on) {
+      [sutraBody, meaningBody].forEach(p => {
+        const el = p.querySelector('.ph[data-i="' + i + '"]');
+        if (el && !el.classList.contains('active')) el.classList.toggle('hl', on);
+      });
+    }
+
+    SEG.forEach((s, i) => {
+      const a = document.createElement('span');
+      a.className = 'ph'; a.dataset.i = i;
+      a.innerHTML = s.prakrit + '<sup>' + marker(s) + '</sup>';
+
+      const b = document.createElement('span');
+      b.className = 'ph'; b.dataset.i = i;   // meaning text filled by renderMeaningText()
+
+      [a, b].forEach(el => {
+        el.addEventListener('mouseenter', () => hoverSync(i, true));
+        el.addEventListener('mouseleave', () => hoverSync(i, false));
+        el.addEventListener('click', () => select(i));
+      });
+
+      sutraBody.appendChild(a);   sutraBody.appendChild(document.createTextNode(' '));
+      meaningBody.appendChild(b); meaningBody.appendChild(document.createTextNode(' '));
+    });
+
+    function renderMeaningText() {
+      meaningBody.querySelectorAll('.ph').forEach(el => {
+        const s = SEG[+el.dataset.i];
+        el.innerHTML = (lang === 'hi' ? s.hi : s.en) + '<sup>' + marker(s) + '</sup>';
+      });
+    }
+
+    function renderWords() {
+      const s = SEG[cur];
+      wordBody.innerHTML = s.words.map(w => `
+        <div class="word">
+          <span class="w dev">${w.w}<small>${w.t}</small></span>
+          <span class="m">${lang === 'hi' ? w.hi : w.en}</span>
+        </div>`).join('');
+    }
+
+    function renderPic() {
+      const s = SEG[cur];
+      const img = document.getElementById('picImg');
+      const ph  = document.getElementById('picPh');
+      img.style.display = 'none'; ph.style.display = 'block';
+      img.onload  = () => { img.style.display = 'block'; ph.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none';  ph.style.display = 'block'; };
+      img.src = IMG_PREFIX + cur + '.png';
+      document.getElementById('picCap').textContent = (lang === 'hi') ? s.capHi : s.capEn;
+      document.getElementById('promptText').value = s.pic + " " + PIC_STYLE;
+    }
+
+    function select(i) {
+      cur = i;
+      [sutraBody, meaningBody].forEach(p => {
+        p.querySelectorAll('.ph').forEach(el => {
+          const on = (+el.dataset.i === i);
+          el.classList.toggle('active', on);
+          if (on) el.classList.remove('hl');
+        });
+      });
+      const a = sutraBody.querySelector('.ph[data-i="' + i + '"]');
+      const b = meaningBody.querySelector('.ph[data-i="' + i + '"]');
+      if (a) a.scrollIntoView({ block: 'nearest' });
+      if (b) b.scrollIntoView({ block: 'nearest' });
+      renderWords();
+      renderPic();
+      document.getElementById('prevBtn').disabled = (i === 0);
+      document.getElementById('nextBtn').disabled = (i === SEG.length - 1);
+    }
+
+    function setLang(l) {
+      lang = l;
+      document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
+      renderMeaningText(); renderWords(); renderPic();
+    }
+
+    // ---- events ----
+    document.getElementById('langToggle').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (b) setLang(b.dataset.lang);
+    });
+    document.getElementById('prevBtn').addEventListener('click', () => { if (cur > 0) select(cur - 1); });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (cur < SEG.length - 1) select(cur + 1); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  document.getElementById('prevBtn').click();
+      if (e.key === 'ArrowRight') document.getElementById('nextBtn').click();
+    });
+    document.getElementById('promptBtn').addEventListener('click', () => {
+      const box = document.getElementById('promptBox');
+      const showing = box.style.display === 'block';
+      box.style.display = showing ? 'none' : 'block';
+      if (!showing) {
+        const ta = document.getElementById('promptText');
+        ta.focus(); ta.select();
+        try { navigator.clipboard.writeText(ta.value); } catch (e) {}
+      }
+    });
+
+    // ---- init ----
+    renderMeaningText();
+    select(0);
+  </script>
+</body>
+</html>
