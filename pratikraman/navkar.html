@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Namaskāra (Navkār) Mantra · Pratikraman (Sthānakvāsī)</title>
+  <meta name="description" content="Navkar / Namaskar Mantra recitation aid — full Prakrit paati, Hindi/English meaning, word-by-word, and pictorial meaning. Sthanakvasi. By Kartik Lodha." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&family=Patrick+Hand&family=Yatra+One&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --panel-bg:        #FFFBF0;
+      --hl:              #FFF3CD;
+      --shadow-soft: 0 2px 0 rgba(58,31,14,.08), 0 5px 14px rgba(58,31,14,.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(200,161,75,.16), transparent 42%),
+        radial-gradient(circle at 90% 100%, rgba(122,29,29,.10), transparent 42%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    .dev      { font-family: "Yatra One", "Mukta", serif; }
+    .dev-body { font-family: "Mukta", system-ui, sans-serif; }
+
+    /* ---------- slim top bar ---------- */
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      border-bottom: 1.5px solid var(--gold);
+      background: rgba(255,251,240,.7);
+      backdrop-filter: blur(4px);
+    }
+    .topbar .back { color: var(--maroon); font-weight: 700; text-decoration: none; font-size: .95rem; white-space: nowrap; }
+    .topbar .title { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+    .topbar .title .dv { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.35rem; line-height: 1; }
+    .topbar .title .rom { color: var(--ink-soft); font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar .draft { font-size: .68rem; background: #FFF3CD; border: 1px dashed var(--gold-deep); color: var(--gold-deep); padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+    .spacer { flex: 1; }
+
+    /* language toggle */
+    .lang-toggle { display: inline-flex; border: 1.5px solid var(--maroon); border-radius: 999px; overflow: hidden; }
+    .lang-toggle button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .82rem;
+      border: none; background: #fff; color: var(--maroon);
+      padding: 5px 14px; cursor: pointer;
+    }
+    .lang-toggle button.on { background: var(--maroon); color: #fff; }
+
+    /* prev/next */
+    .nav-btns { display: inline-flex; gap: 6px; }
+    .nav-btns button {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .95rem;
+      border: 1.5px solid var(--maroon); background: #fff; color: var(--maroon);
+      border-radius: 999px; width: 34px; height: 34px; cursor: pointer;
+    }
+    .nav-btns button:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ---------- 4-panel grid, fills remaining height ---------- */
+    .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      grid-template-rows: 1.15fr 1fr;
+      grid-template-areas:
+        "sutra   words"
+        "meaning pic";
+      gap: 12px;
+      padding: 12px 16px 14px;
+    }
+    .panel {
+      background: var(--panel-bg);
+      border: 1.5px solid var(--gold);
+      border-radius: 14px;
+      box-shadow: var(--shadow-soft);
+      padding: 24px 14px 12px;
+      position: relative;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel .label {
+      position: absolute; top: -10px; left: 14px;
+      background: var(--maroon); color: #fff;
+      font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 999px;
+    }
+    .panel .body { overflow-y: auto; min-height: 0; padding-right: 4px; }
+    #sutra   { grid-area: sutra; }
+    #meaning { grid-area: meaning; }
+    #words   { grid-area: words; }
+    #pic     { grid-area: pic; }
+
+    /* ---- Panels A & B: flowing paragraph with synced phrase-boxes ---- */
+    .para { margin: 0; }
+    #sutra .para   { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.24rem; line-height: 2.0; }
+    #meaning .para { font-family: "Mukta", sans-serif; color: var(--ink); font-size: 1.02rem; line-height: 1.95; }
+
+    .ph {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 6px;
+      border: 1.5px solid transparent;   /* the box, transparent until synced */
+      transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+    .ph sup { font-family: "Mukta", sans-serif; font-size: .55em; color: var(--gold-deep); font-weight: 700; padding-left: 1px; vertical-align: super; }
+    /* hover-sync box (lighter) */
+    .ph.hl { background: rgba(200,161,75,.22); border-color: var(--gold-deep); }
+    /* selected box (stronger, persistent) */
+    .ph.active { background: var(--hl); border-color: var(--maroon); box-shadow: 0 0 0 1px var(--maroon); }
+
+    /* ---- Panel C: word-by-word ---- */
+    .word { display: grid; grid-template-columns: minmax(78px,auto) 1fr; gap: 10px; align-items: baseline; padding: 5px 4px; border-bottom: 1px dotted rgba(140,106,31,.32); }
+    .word:last-child { border-bottom: none; }
+    .word .w { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.04rem; }
+    .word .w small { display: block; font-family: "Mukta"; font-style: italic; color: var(--ink-soft); font-size: .68rem; }
+    .word .m { font-family: "Mukta", sans-serif; font-size: .92rem; color: var(--ink); }
+
+    /* ---- Panel D: pictorial meaning ---- */
+    #pic .body { align-items: center; text-align: center; display: flex; flex-direction: column; }
+    .pic-frame {
+      width: 100%; max-width: 240px; aspect-ratio: 4/3; margin: 0 auto 8px;
+      border: 2px dashed var(--gold); border-radius: 12px;
+      background: repeating-linear-gradient(45deg, #fff, #fff 10px, #FDF6E3 10px, #FDF6E3 20px);
+      display: grid; place-items: center; overflow: hidden; position: relative;
+    }
+    .pic-frame img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .pic-frame .ph { font-family: "Mukta"; color: var(--gold-deep); font-size: .8rem; padding: 8px; }
+    .pic-cap { font-family: "Mukta", sans-serif; font-size: .9rem; color: var(--ink-soft); margin-bottom: 8px; line-height: 1.4; }
+    .prompt-btn {
+      font-family: "Mukta", sans-serif; font-weight: 700; font-size: .8rem;
+      border: 1.5px solid var(--gold-deep); background: #fff; color: var(--gold-deep);
+      border-radius: 999px; padding: 5px 12px; cursor: pointer;
+    }
+    .prompt-btn:hover { background: var(--gold-deep); color: #fff; }
+    .prompt-box { display: none; margin-top: 8px; width: 100%; }
+    .prompt-box textarea {
+      width: 100%; height: 76px; font-family: "Mukta", sans-serif; font-size: .74rem;
+      border: 1px solid var(--gold); border-radius: 8px; padding: 6px; resize: none; color: var(--ink-soft);
+      background: #fffdf6;
+    }
+
+    /* ---------- responsive: allow scroll on small screens ---------- */
+    @media (max-width: 720px) {
+      body { height: auto; overflow: auto; }
+      .stage {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-template-areas: "sutra" "meaning" "words" "pic";
+      }
+      .panel { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="back" href="../index.html">&larr;</a>
+    <div class="title">
+      <span class="dv">णमोकार मंत्र</span>
+      <span class="rom">Namaskāra (Navkār) Mantra · Sthānakvāsī</span>
+    </div>
+    <span class="draft">⚠ DRAFT</span>
+    <span class="spacer"></span>
+    <div class="nav-btns">
+      <button id="prevBtn" title="Previous line">&larr;</button>
+      <button id="nextBtn" title="Next line">&rarr;</button>
+    </div>
+    <div class="lang-toggle" id="langToggle">
+      <button data-lang="hi" class="on">हिंदी</button>
+      <button data-lang="en">English</button>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- PANEL A: full Prakrit sutra (one paragraph) -->
+    <section class="panel" id="sutra">
+      <span class="label">A · मूल पाठ · Prākṛt</span>
+      <div class="body"><p class="para dev" id="sutraBody"></p></div>
+    </section>
+
+    <!-- PANEL C: word-by-word -->
+    <section class="panel" id="words">
+      <span class="label">C · शब्दार्थ · Words</span>
+      <div class="body" id="wordBody"></div>
+    </section>
+
+    <!-- PANEL B: full meaning (one paragraph, synced boxes) -->
+    <section class="panel" id="meaning">
+      <span class="label" id="meaningLabel">B · अर्थ · Meaning</span>
+      <div class="body"><p class="para" id="meaningBody"></p></div>
+    </section>
+
+    <!-- PANEL D: pictorial meaning -->
+    <section class="panel" id="pic">
+      <span class="label">D · चित्र-अर्थ · Pictorial</span>
+      <div class="body">
+        <div class="pic-frame">
+          <img id="picImg" alt="pictorial meaning" />
+          <span class="ph" id="picPh">चित्र यहाँ आएगा<br><small>(image will load here)</small></span>
+        </div>
+        <div class="pic-cap dev-body" id="picCap"></div>
+        <button class="prompt-btn" id="promptBtn">🎨 Image prompt</button>
+        <div class="prompt-box" id="promptBox">
+          <textarea id="promptText" readonly></textarea>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ============================================================
+    //  DRAFT content — Namaskāra (Navkār) Mantra (Sthānakvāsī).  VERIFY before publishing.
+    //  Sources: standard Ardhamāgadhī pañca-namaskāra text; jainknowledge.com, jinavachan.
+    //  Nine padas. Each line drives all 4 panels. Meanings carry {hi, en}.
+    // ============================================================
+    const SEG = [
+      {
+        n: 1,
+        prakrit: "णमो अरिहंताणं।",
+        rom: "Ṇamo Arihantāṇaṁ.",
+        hi: "अरिहंत भगवंतों को नमस्कार हो — जिन्होंने राग-द्वेष रूपी भीतरी शत्रुओं को जीत लिया और केवलज्ञान पाकर जीवों को धर्म का उपदेश देते हैं।",
+        en: "Obeisance to the Arihants — the fully awakened ones who have conquered their inner enemies (attachment and aversion) and, endowed with omniscience, show the path of dharma to all beings.",
+        words: [
+          { w: "णमो",       t: "ṇamo",       hi: "नमस्कार हो", en: "obeisance / I bow" },
+          { w: "अरिहंताणं", t: "arihantāṇaṁ", hi: "अरिहंतों को (शत्रु-विजेता, केवली)", en: "to the Arihants (conquerors, omniscient)" }
+        ],
+        pic: "A serene fully-awakened living teacher (an Arihant — NOT a statue or idol) seated cross-legged in calm meditation beneath a spreading tree, eyes gently lowered, a soft radiant halo of light around the head, one hand raised in a gentle gesture of teaching and blessing; a few devotees seated at a respectful distance listening. Simple bare surroundings, victorious inner calm of one who has conquered the passions. No pedestal, no temple, no ornaments.",
+        capHi: "अरिहंत — राग-द्वेष के विजेता, धर्म के उपदेशक।",
+        capEn: "The Arihant — conqueror of passions, teacher of dharma."
+      },
+      {
+        n: 2,
+        prakrit: "णमो सिद्धाणं।",
+        rom: "Ṇamo Siddhāṇaṁ.",
+        hi: "सिद्ध भगवंतों को नमस्कार हो — जो समस्त कर्मों का क्षय कर मुक्त हो चुकी शुद्ध, निराकार आत्माएँ हैं।",
+        en: "Obeisance to the Siddhas — the perfected, liberated pure souls who have shed all karma and dwell free at the summit of the universe.",
+        words: [
+          { w: "णमो",     t: "ṇamo",     hi: "नमस्कार हो", en: "obeisance / I bow" },
+          { w: "सिद्धाणं", t: "siddhāṇaṁ", hi: "सिद्धों को (मुक्त शुद्ध आत्माएँ)", en: "to the Siddhas (liberated pure souls)" }
+        ],
+        pic: "Luminous liberated pure souls shown as soft glowing formless silhouettes of light resting at the crescent-shaped Siddhashila at the very summit of the universe, radiant white-and-gold light rising into a calm soft sky, utterly still and free, released from all karma. Abstract and serene — no idols, no featured bodies, only gentle radiant presences of light.",
+        capHi: "सिद्ध — कर्ममुक्त शुद्ध आत्माएँ, लोक के अग्रभाग पर।",
+        capEn: "The Siddhas — karma-free souls at the universe's summit."
+      },
+      {
+        n: 3,
+        prakrit: "णमो आयरियाणं।",
+        rom: "Ṇamo Āyariyāṇaṁ.",
+        hi: "आचार्य भगवंतों को नमस्कार हो — जो संघ के प्रमुख हैं और स्वयं आचरण करके धर्म का पालन व प्रचार कराते हैं।",
+        en: "Obeisance to the Acharyas — the spiritual heads of the order who, by their own conduct, uphold and guide the practice of dharma.",
+        words: [
+          { w: "णमो",       t: "ṇamo",       hi: "नमस्कार हो", en: "obeisance / I bow" },
+          { w: "आयरियाणं", t: "āyariyāṇaṁ", hi: "आचार्यों को (संघ-प्रमुख)", en: "to the Acharyas (heads of the order)" }
+        ],
+        pic: "A senior Sthanakvasi acharya (head monk) in plain white robe with a white muhpatti and a soft woolen rajoharan whisk, seated on a low simple seat, gently guiding and instructing a small group of attentive monks seated before him, one hand raised in guidance. A bare simple upashray hall in warm light. Leadership expressed through humble exemplary conduct. No idols, no temple.",
+        capHi: "आचार्य — आचरण से मार्गदर्शन देने वाले संघ-प्रमुख।",
+        capEn: "The Acharya — the order's head who leads by conduct."
+      },
+      {
+        n: 4,
+        prakrit: "णमो उवज्झायाणं।",
+        rom: "Ṇamo Uvajjhāyāṇaṁ.",
+        hi: "उपाध्याय भगवंतों को नमस्कार हो — जो साधुओं को शास्त्रों का अध्ययन कराते हैं।",
+        en: "Obeisance to the Upadhyayas — the teacher-monks who impart the study of the sacred scriptures.",
+        words: [
+          { w: "णमो",         t: "ṇamo",         hi: "नमस्कार हो", en: "obeisance / I bow" },
+          { w: "उवज्झायाणं", t: "uvajjhāyāṇaṁ", hi: "उपाध्यायों को (शास्त्र-अध्यापक)", en: "to the Upadhyayas (scripture-teachers)" }
+        ],
+        pic: "A Sthanakvasi upadhyaya (teacher-monk) in white with a white muhpatti and a woolen rajoharan, seated reading from open palm-leaf scriptures on a low wooden reading stand, teaching the sacred texts to two younger monks who listen attentively. Manuscripts resting nearby. Quiet study and the transmission of knowledge. No idols, no temple.",
+        capHi: "उपाध्याय — शास्त्रों का अध्ययन कराने वाले।",
+        capEn: "The Upadhyaya — teacher of the scriptures."
+      },
+      {
+        n: 5,
+        prakrit: "णमो लोए सव्वसाहूणं।",
+        rom: "Ṇamo Loe Savvasāhūṇaṁ.",
+        hi: "लोक में विचरते समस्त साधु-साध्वियों को नमस्कार हो — जो संयम व तप का पालन करते हैं।",
+        en: "Obeisance to all the ascetics (sadhus and sadhvis) everywhere in the world — those who observe self-restraint and austerity.",
+        words: [
+          { w: "णमो",      t: "ṇamo",      hi: "नमस्कार हो", en: "obeisance / I bow" },
+          { w: "लोए",       t: "loe",       hi: "लोक में", en: "in the world" },
+          { w: "सव्व",      t: "savva",     hi: "समस्त / सब", en: "all" },
+          { w: "साहूणं",    t: "sāhūṇaṁ",   hi: "साधुओं को (साधु-साध्वी)", en: "to the ascetics (monks & nuns)" }
+        ],
+        pic: "A small group of Sthanakvasi ascetics — sadhus and sadhvis in plain white cloth, each with a white muhpatti and a soft woolen rajoharan whisk, walking barefoot in a gentle single file along a simple earthen path, humble and serene, one carrying a plain wooden alms bowl. Detached, peaceful wandering mendicants. No footwear, no possessions, no temple.",
+        capHi: "साधु-साध्वी — लोक के समस्त संयमी।",
+        capEn: "All sadhus & sadhvis of the world."
+      },
+      {
+        n: 6,
+        prakrit: "एसो पंच णमुक्कारो,",
+        rom: "Eso pañca ṇamukkāro,",
+        hi: "यह पाँच (परमेष्ठियों को किया गया) नमस्कार,",
+        en: "This fivefold obeisance (to the five supreme beings),",
+        words: [
+          { w: "एसो",       t: "eso",       hi: "यह", en: "this" },
+          { w: "पंच",       t: "pañca",     hi: "पाँच", en: "five(-fold)" },
+          { w: "णमुक्कारो", t: "ṇamukkāro", hi: "नमस्कार", en: "obeisance / salutation" }
+        ],
+        pic: "A devotee in simple white clothes kneeling with palms joined in reverent anjali mudra, head bowed, before FIVE softly glowing orbs of light arranged in a gentle horizontal arc above, evenly spaced and clearly separated — representing the five supreme beings (Panch Parameshthi) in their five traditional colours, strictly in this left-to-right order: (1) a WHITE glowing orb — Arihant; (2) a RED glowing orb — Siddha; (3) a golden-YELLOW glowing orb — Acharya; (4) a GREEN glowing orb — Upadhyaya; (5) a dark BLACK / deep-blue glowing orb — Sadhu. Exactly five distinct coloured orbs of soft light, no faces, no idols, no temple. A single heartfelt fivefold salutation, quiet devotion, warm calm mood.",
+        capHi: "पंच परमेष्ठी को यह एक नमस्कार।",
+        capEn: "This one obeisance to the five supreme beings."
+      },
+      {
+        n: 7,
+        prakrit: "सव्वपावप्पणासणो।",
+        rom: "Savva-pāvappaṇāsaṇo.",
+        hi: "समस्त पापों का नाश करने वाला है;",
+        en: "is the destroyer of all sins;",
+        words: [
+          { w: "सव्व",       t: "savva",       hi: "समस्त / सब", en: "all" },
+          { w: "पाव",        t: "pāva",        hi: "पाप", en: "sins / evil" },
+          { w: "प्पणासणो",   t: "ppaṇāsaṇo",   hi: "नाश करने वाला", en: "destroyer / that annihilates" }
+        ],
+        pic: "A kneeling devotee in white with folded hands, bathed in a warm cleansing golden light that dissolves faint dark grey wisps of sin and karma rising away from them and vanishing into the light. A feeling of purification and release. Serene, uplifting, hopeful. No idols, no temple.",
+        capHi: "सब पापों का नाश करने वाला।",
+        capEn: "The destroyer of all sins."
+      },
+      {
+        n: 8,
+        prakrit: "मंगलाणं च सव्वेसिं,",
+        rom: "Maṅgalāṇaṁ cha savvesiṁ,",
+        hi: "और समस्त मंगलों में से",
+        en: "and among all auspicious things,",
+        words: [
+          { w: "मंगलाणं", t: "maṅgalāṇaṁ", hi: "मंगलों में", en: "of / among auspicious things" },
+          { w: "च",        t: "cha",         hi: "और", en: "and" },
+          { w: "सव्वेसिं", t: "savvesiṁ",   hi: "समस्त में से", en: "of all" }
+        ],
+        pic: "A warm auspicious scene: a devotee's joined hands at the centre glowing with a bright golden light of supreme auspiciousness, gently outshining a few softer everyday auspicious objects placed humbly around — a small oil lamp, a lotus flower, a water kalash — all dimmer than the central radiance. Warm, sacred, hopeful. No idols, no temple.",
+        capHi: "समस्त मंगलों में।",
+        capEn: "Among all that is auspicious."
+      },
+      {
+        n: 9,
+        prakrit: "पढमं हवइ मंगलं॥",
+        rom: "Paḍhamaṁ havai maṅgalaṁ.",
+        hi: "यह प्रथम — अर्थात् सर्वश्रेष्ठ — मंगल है।",
+        en: "it is the foremost — the supreme — auspicious one.",
+        words: [
+          { w: "पढमं", t: "paḍhamaṁ", hi: "प्रथम / सर्वश्रेष्ठ", en: "first / foremost" },
+          { w: "हवइ",   t: "havai",     hi: "होता है", en: "is / becomes" },
+          { w: "मंगलं", t: "maṅgalaṁ",  hi: "मंगल", en: "auspicious one" }
+        ],
+        pic: "A serene dawn: soft golden sunrise light spreading over a calm simple landscape, a lone devotee in white standing with joined hands in quiet gratitude, greeting the very first light of the day — a feeling of the most auspicious of beginnings. Fresh, hopeful, radiant first light. No temple, no idol.",
+        capHi: "यही प्रथम व सर्वश्रेष्ठ मंगल है।",
+        capEn: "This is the first and foremost auspicious."
+      }
+    ];
+
+    const IMG_PREFIX = "img/navkar-";   // drop img/navkar-0.png ... -8.png to fill Panel D
+
+    // Shared render style + Sthanakvasi guardrails, appended to every image prompt.
+    const PIC_STYLE = "Rendered as a hand-drawn COLORED-PENCIL SKETCH: visible pencil strokes and paper tooth, soft layered shading, delicate line work, warm gentle earthy palette (cream, ochre-gold, deep maroon, muted sage green, soft browns) on an aged parchment-cream background. Serene, tender, devotional Jain mood. Sthanakvasi tradition — strictly aniconic: NO idols, murtis or ornate temple; any monk/nun wears plain white cloth with a white muhpatti (mouth-cloth) and holds a soft woolen rajoharan whisk; laypeople in simple modest clothes. No text, no lettering, no logos. 4:3 composition, gentle soft lighting.";
+    let cur = 0;
+    let lang = "hi";
+
+    const sutraBody   = document.getElementById('sutraBody');
+    const meaningBody = document.getElementById('meaningBody');
+    const wordBody    = document.getElementById('wordBody');
+
+    // ---- build Panel A (full sutra) & Panel B (full meaning) as paragraphs of phrase-spans ----
+    function marker(s) { return (s.n === "◈") ? "◈" : s.n; }
+
+    function hoverSync(i, on) {
+      [sutraBody, meaningBody].forEach(p => {
+        const el = p.querySelector('.ph[data-i="' + i + '"]');
+        if (el && !el.classList.contains('active')) el.classList.toggle('hl', on);
+      });
+    }
+
+    SEG.forEach((s, i) => {
+      const a = document.createElement('span');
+      a.className = 'ph'; a.dataset.i = i;
+      a.innerHTML = s.prakrit + '<sup>' + marker(s) + '</sup>';
+
+      const b = document.createElement('span');
+      b.className = 'ph'; b.dataset.i = i;   // meaning text filled by renderMeaningText()
+
+      [a, b].forEach(el => {
+        el.addEventListener('mouseenter', () => hoverSync(i, true));
+        el.addEventListener('mouseleave', () => hoverSync(i, false));
+        el.addEventListener('click', () => select(i));
+      });
+
+      sutraBody.appendChild(a);   sutraBody.appendChild(document.createTextNode(' '));
+      meaningBody.appendChild(b); meaningBody.appendChild(document.createTextNode(' '));
+    });
+
+    function renderMeaningText() {
+      meaningBody.querySelectorAll('.ph').forEach(el => {
+        const s = SEG[+el.dataset.i];
+        el.innerHTML = (lang === 'hi' ? s.hi : s.en) + '<sup>' + marker(s) + '</sup>';
+      });
+    }
+
+    function renderWords() {
+      const s = SEG[cur];
+      wordBody.innerHTML = s.words.map(w => `
+        <div class="word">
+          <span class="w dev">${w.w}<small>${w.t}</small></span>
+          <span class="m">${lang === 'hi' ? w.hi : w.en}</span>
+        </div>`).join('');
+    }
+
+    function renderPic() {
+      const s = SEG[cur];
+      const img = document.getElementById('picImg');
+      const ph  = document.getElementById('picPh');
+      img.style.display = 'none'; ph.style.display = 'block';
+      img.onload  = () => { img.style.display = 'block'; ph.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none';  ph.style.display = 'block'; };
+      img.src = IMG_PREFIX + cur + '.png';
+      document.getElementById('picCap').textContent = (lang === 'hi') ? s.capHi : s.capEn;
+      document.getElementById('promptText').value = s.pic + " " + PIC_STYLE;
+    }
+
+    function select(i) {
+      cur = i;
+      [sutraBody, meaningBody].forEach(p => {
+        p.querySelectorAll('.ph').forEach(el => {
+          const on = (+el.dataset.i === i);
+          el.classList.toggle('active', on);
+          if (on) el.classList.remove('hl');
+        });
+      });
+      const a = sutraBody.querySelector('.ph[data-i="' + i + '"]');
+      const b = meaningBody.querySelector('.ph[data-i="' + i + '"]');
+      if (a) a.scrollIntoView({ block: 'nearest' });
+      if (b) b.scrollIntoView({ block: 'nearest' });
+      renderWords();
+      renderPic();
+      document.getElementById('prevBtn').disabled = (i === 0);
+      document.getElementById('nextBtn').disabled = (i === SEG.length - 1);
+    }
+
+    function setLang(l) {
+      lang = l;
+      document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
+      renderMeaningText(); renderWords(); renderPic();
+    }
+
+    // ---- events ----
+    document.getElementById('langToggle').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (b) setLang(b.dataset.lang);
+    });
+    document.getElementById('prevBtn').addEventListener('click', () => { if (cur > 0) select(cur - 1); });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (cur < SEG.length - 1) select(cur + 1); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  document.getElementById('prevBtn').click();
+      if (e.key === 'ArrowRight') document.getElementById('nextBtn').click();
+    });
+    document.getElementById('promptBtn').addEventListener('click', () => {
+      const box = document.getElementById('promptBox');
+      const showing = box.style.display === 'block';
+      box.style.display = showing ? 'none' : 'block';
+      if (!showing) {
+        const ta = document.getElementById('promptText');
+        ta.focus(); ta.select();
+        try { navigator.clipboard.writeText(ta.value); } catch (e) {}
+      }
+    });
+
+    // ---- init ----
+    renderMeaningText();
+    select(0);
+  </script>
+</body>
+</html>

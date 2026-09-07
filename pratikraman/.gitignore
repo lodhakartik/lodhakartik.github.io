@@ -1,0 +1,6 @@
+# Internal tooling — not part of the published site
+gen_*.py
+.env
+.env.*
+__pycache__/
+*.pyc
