@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Sāmāyika · Pratikraman (Sthānakvāsī) — Kartik Lodha</title>
+  <meta name="description" content="The Samayik (Pratikraman) sutras of the Sthanakvasi tradition — each with full Prakrit paati, Hindi/English meaning, word-by-word gloss, and pictorial meaning. By Kartik Lodha." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&family=Patrick+Hand&family=Yatra+One&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --panel-bg:        #FFFBF0;
+      --hl:              #FFF3CD;
+      --shadow-soft: 0 2px 0 rgba(58,31,14,.08), 0 5px 14px rgba(58,31,14,.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(200,161,75,.16), transparent 42%),
+        radial-gradient(circle at 90% 100%, rgba(122,29,29,.10), transparent 42%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .dev      { font-family: "Yatra One", "Mukta", serif; }
+    .dev-body { font-family: "Mukta", system-ui, sans-serif; }
+
+    /* ---------- top bar ---------- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      border-bottom: 1.5px solid var(--gold);
+      background: rgba(255,251,240,.7);
+      backdrop-filter: blur(4px);
+      position: sticky; top: 0; z-index: 5;
+    }
+    .topbar .back { color: var(--maroon); font-weight: 700; text-decoration: none; font-size: .95rem; white-space: nowrap; }
+    .topbar .back:hover { text-decoration: underline; }
+    .topbar .brand { margin-left: auto; color: var(--gold-deep); font-size: .9rem; }
+
+    /* ---------- hero ---------- */
+    .hero { text-align: center; padding: 30px 20px 8px; }
+    .hero h1 {
+      font-family: "Yatra One", serif;
+      color: var(--maroon);
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      margin: 0 0 6px;
+      letter-spacing: .5px;
+    }
+    .hero .sub { color: var(--ink-soft); font-size: 1.15rem; margin: 0 0 4px; }
+    .hero .sub .rom { color: var(--gold-deep); }
+    .hero .lead {
+      max-width: 640px; margin: 14px auto 0;
+      color: var(--ink-soft); font-size: 1.02rem; line-height: 1.5;
+    }
+    .draft {
+      display: inline-block; margin-top: 14px;
+      background: var(--hl); border: 1.5px solid var(--gold);
+      color: var(--gold-deep); font-weight: 700;
+      padding: 4px 14px; border-radius: 999px; font-size: .85rem;
+    }
+
+    /* ---------- grid ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 18px;
+      max-width: 1100px;
+      margin: 24px auto 60px;
+      padding: 0 18px;
+    }
+    .card {
+      display: flex; flex-direction: column;
+      background: var(--panel-bg);
+      border: 1.5px solid var(--gold);
+      border-radius: 14px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--shadow-soft);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 0 rgba(58,31,14,.10), 0 12px 26px rgba(58,31,14,.16);
+      border-color: var(--maroon);
+    }
+    .card .thumb {
+      position: relative;
+      aspect-ratio: 3 / 2;
+      background: linear-gradient(135deg, #f6ecd0, #efe0b6);
+      overflow: hidden;
+    }
+    .card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card .step {
+      position: absolute; top: 8px; left: 8px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--maroon); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .95rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    .card .body { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 3px; }
+    .card .dv { font-family: "Yatra One", serif; color: var(--maroon); font-size: 1.5rem; line-height: 1.15; }
+    .card .rom { font-family: "Mukta", sans-serif; color: var(--gold-deep); font-weight: 700; font-size: .92rem; }
+    .card .role { color: var(--ink-soft); font-size: .95rem; line-height: 1.35; margin-top: 4px; }
+
+    footer {
+      text-align: center; color: var(--ink-soft);
+      font-size: .9rem; padding: 0 20px 40px;
+    }
+    footer a { color: var(--maroon); }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="../index.html">← Home</a>
+    <span class="brand dev-body">कार्तिक लोढ़ा · Kartik Lodha</span>
+  </div>
+
+  <div class="hero">
+    <h1 class="dev">सामायिक · प्रतिक्रमण</h1>
+    <p class="sub"><span class="dev">पाठ संग्रह</span> · <span class="rom">Sāmāyika (Pratikraman) Sūtras · Sthānakvāsī</span></p>
+    <p class="lead">The paaths of Sāmāyika, in the order they are recited. Tap any one for the full Prakrit paati, its flowing Hindi &amp; English meaning, a word-by-word gloss, and a pictorial meaning.</p>
+    <div class="draft dev-body">⚠ DRAFT — text under verification</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer class="dev-body">
+    Sthānakvāsī tradition · aniconic illustrations · for personal recitation &amp; learning.<br>
+    Made with devotion by <a href="../index.html">Kartik Lodha</a>.
+  </footer>
+
+  <script>
+    // Samayik recitation order
+    const PAATHS = [
+      { slug:"navkar",        dv:"णमोकार मंत्र",     rom:"Namaskāra (Navkār) Mantra", role:"Obeisance to the five supreme beings — the opening of every rite." },
+      { slug:"chattari",      dv:"चत्तारि मंगलं",     rom:"Chattāri Maṅgalaṁ",         role:"The four-fold auspiciousness &amp; refuge — Arihanta, Siddha, Sādhu, Dharma." },
+      { slug:"tikhutto",      dv:"तिक्खुत्तो",        rom:"Tikkhutto (Guru Vandanā)",  role:"Salutation to the guru — praise in word, body and mind." },
+      { slug:"khamana",       dv:"इच्छामि खमासमणो",  rom:"Icchāmi Khamāsamaṇo",       role:"Bowing to the forgiving ascetic, with a whole-hearted head-bow." },
+      { slug:"iriyavahiyam",  dv:"इरियावहियं",        rom:"Iriyāvahiyaṁ",              role:"Confession for harm caused to life while moving about." },
+      { slug:"tassauttari",   dv:"तस्स उत्तरी",       rom:"Tassa Uttarī",              role:"Resolving to stand in kausagga for deeper purification." },
+      { slug:"annattha",      dv:"अन्नत्थ",           rom:"Annattha (Āgāra Sūtra)",    role:"The involuntary exceptions permitted during kausagga." },
+      { slug:"logassa",       dv:"लोगस्स",            rom:"Logassa",                   role:"Praise of the twenty-four Tīrthaṅkaras, prayer for health &amp; samādhi." },
+      { slug:"karemibhante",  dv:"करेमि भंते",        rom:"Karemi Bhante",             role:"The central vow of Sāmāyika — equanimity, renouncing all sinful activity." },
+    ];
+
+    const grid = document.getElementById("grid");
+    PAATHS.forEach((p, i) => {
+      const a = document.createElement("a");
+      a.className = "card";
+      a.href = p.slug + ".html";
+      a.innerHTML =
+        '<div class="thumb">' +
+          '<span class="step">' + (i + 1) + '</span>' +
+          '<img src="img/' + p.slug + '-0.png" alt="" loading="lazy" ' +
+               'onerror="this.style.display=\'none\'">' +
+        '</div>' +
+        '<div class="body">' +
+          '<span class="dv">' + p.dv + '</span>' +
+          '<span class="rom">' + p.rom + '</span>' +
+          '<span class="role dev-body">' + p.role + '</span>' +
+        '</div>';
+      grid.appendChild(a);
+    });
+  </script>
+</body>
+</html>
