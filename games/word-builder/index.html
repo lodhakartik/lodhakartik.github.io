@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Word Builder &middot; Kartik Lodha</title>
+  <meta name="description" content="Build words letter by letter from a picture. Three levels from easy 3-letter words to longer ones, with a friendly voice." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Fredoka:wght@500;600;700&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --parchment-dark:  #E5CE8A;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --green:           #2E7D32;
+      --shadow-soft: 0 2px 0 rgba(58, 31, 14, 0.10), 0 6px 18px rgba(58, 31, 14, 0.10);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: "Fredoka", "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(200, 161, 75, 0.18), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(122, 29, 29, 0.10), transparent 40%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      min-height: 100%;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ---------- top bar ---------- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+    }
+    .home-link {
+      text-decoration: none;
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--gold-deep);
+      background: rgba(255, 248, 225, 0.7);
+      border: 1.5px solid var(--gold);
+      border-radius: 999px;
+      padding: 6px 16px;
+      white-space: nowrap;
+    }
+    .game-title {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 30px;
+      color: var(--maroon);
+      margin: 0;
+      text-align: center;
+      flex: 1;
+    }
+    .stars-badge {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--gold-deep);
+      background: rgba(255, 248, 225, 0.7);
+      border: 1.5px solid var(--gold);
+      border-radius: 999px;
+      padding: 6px 14px;
+      white-space: nowrap;
+      min-width: 66px;
+      text-align: center;
+    }
+
+    /* ---------- level toggle ---------- */
+    .level-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 4px 0 6px;
+      flex-wrap: wrap;
+    }
+    .level-btn {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--ink-soft);
+      background: rgba(255, 255, 255, 0.55);
+      border: 2px solid var(--gold);
+      border-radius: 999px;
+      padding: 7px 18px;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+    }
+    .level-btn.active { background: var(--maroon); color: #FFF8E7; }
+    .level-btn:active { transform: scale(0.95); }
+
+    /* ---------- stage ---------- */
+    .stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 4px 16px 24px;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .pic {
+      font-size: clamp(80px, 26vw, 150px);
+      line-height: 1;
+      margin: 4px 0 2px;
+      cursor: pointer;
+    }
+    .pic:active { transform: scale(0.94); }
+    .model {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: clamp(24px, 7vw, 38px);
+      letter-spacing: 0.18em;
+      color: var(--gold-deep);
+      opacity: 0.55;
+      min-height: 1.1em;
+      margin: 0 0 6px;
+      text-transform: uppercase;
+    }
+
+    /* ---------- answer slots ---------- */
+    .slots {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 6px 0 14px;
+    }
+    .slot {
+      width: clamp(44px, 13vw, 64px);
+      height: clamp(54px, 16vw, 78px);
+      border: 3px dashed var(--gold);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Fredoka", sans-serif;
+      font-weight: 700;
+      font-size: clamp(30px, 9vw, 46px);
+      color: var(--maroon);
+      text-transform: uppercase;
+    }
+    .slot.filled {
+      border-style: solid;
+      background: #d8f0d8;
+      border-color: var(--green);
+      color: var(--green);
+      animation: pop 0.25s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.5); }
+      70% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    /* ---------- letter bank ---------- */
+    .bank {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 6px 0 4px;
+      max-width: 520px;
+    }
+    .tile {
+      width: clamp(50px, 15vw, 70px);
+      height: clamp(50px, 15vw, 70px);
+      font-family: "Fredoka", sans-serif;
+      font-weight: 700;
+      font-size: clamp(28px, 8vw, 40px);
+      color: var(--maroon);
+      background: rgba(255, 255, 255, 0.7);
+      border: 3px solid var(--gold);
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      text-transform: uppercase;
+      transition: transform 120ms ease, opacity 150ms ease;
+    }
+    .tile:active { transform: scale(0.92); }
+    .tile.used { opacity: 0.25; pointer-events: none; transform: scale(0.9); }
+    .tile.wrong { animation: shake 0.4s; border-color: var(--maroon); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    .controls { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+    .ctl-btn {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: 19px;
+      color: #FFF8E7;
+      background: var(--maroon);
+      border: none;
+      border-radius: 999px;
+      padding: 10px 22px;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+    }
+    .ctl-btn.soft { background: var(--gold); color: var(--ink); }
+    .ctl-btn:active { transform: scale(0.95); }
+
+    /* ---------- confetti ---------- */
+    .confetti {
+      position: fixed;
+      top: -40px;
+      font-size: 28px;
+      pointer-events: none;
+      z-index: 50;
+      animation: fall linear forwards;
+    }
+    @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: 0.9; } }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-soft);
+      opacity: 0.7;
+      padding: 4px 0 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="home-link" href="../../index.html">&#x2190; Home</a>
+    <h1 class="game-title">Word Builder</h1>
+    <span class="stars-badge" id="stars">&#x2B50; 0</span>
+  </div>
+
+  <div class="level-toggle">
+    <button class="level-btn active" data-lvl="0">&#x1F7E2; Easy</button>
+    <button class="level-btn" data-lvl="1">&#x1F7E1; Medium</button>
+    <button class="level-btn" data-lvl="2">&#x1F534; Hard</button>
+  </div>
+
+  <div class="stage" id="stage"><!-- filled by JS --></div>
+
+  <footer>&#xA9; Kartik Lodha &middot; made with love for little learners</footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // Three levels, basic -> advanced. Each word has a picture.
+    var LEVELS = [
+      // Level 0 — Easy: 3-letter words, model shown, no distractors
+      [
+        { w: "cat", e: "🐱" }, { w: "dog", e: "🐶" }, { w: "sun", e: "☀️" },
+        { w: "pig", e: "🐷" }, { w: "bus", e: "🚌" }, { w: "cup", e: "☕" },
+        { w: "hat", e: "🎩" }, { w: "bed", e: "🛏️" }, { w: "box", e: "📦" },
+        { w: "cow", e: "🐄" }, { w: "bee", e: "🐝" }, { w: "car", e: "🚗" },
+        { w: "fox", e: "🦊" }, { w: "owl", e: "🦉" }, { w: "egg", e: "🥚" },
+        { w: "key", e: "🔑" }, { w: "ant", e: "🐜" }, { w: "bat", e: "🦇" },
+        { w: "map", e: "🗺️" }, { w: "pen", e: "🖊️" }
+      ],
+      // Level 1 — Medium: 4-letter words, model shown, +2 distractor letters
+      [
+        { w: "fish", e: "🐟" }, { w: "frog", e: "🐸" }, { w: "star", e: "⭐" },
+        { w: "tree", e: "🌳" }, { w: "ball", e: "⚽" }, { w: "cake", e: "🍰" },
+        { w: "milk", e: "🥛" }, { w: "book", e: "📖" }, { w: "bird", e: "🐦" },
+        { w: "boat", e: "⛵" }, { w: "moon", e: "🌙" }, { w: "lion", e: "🦁" },
+        { w: "duck", e: "🦆" }, { w: "leaf", e: "🍃" }, { w: "corn", e: "🌽" },
+        { w: "drum", e: "🥁" }, { w: "kite", e: "🪁" }, { w: "bell", e: "🔔" },
+        { w: "ring", e: "💍" }, { w: "gift", e: "🎁" }
+      ],
+      // Level 2 — Hard: 5-6 letter words, no model, +3 distractor letters
+      [
+        { w: "apple", e: "🍎" }, { w: "tiger", e: "🐯" }, { w: "house", e: "🏠" },
+        { w: "train", e: "🚆" }, { w: "mango", e: "🥭" }, { w: "snake", e: "🐍" },
+        { w: "zebra", e: "🦓" }, { w: "panda", e: "🐼" }, { w: "robot", e: "🤖" },
+        { w: "sheep", e: "🐑" }, { w: "mouse", e: "🐭" }, { w: "horse", e: "🐎" },
+        { w: "whale", e: "🐳" }, { w: "clock", e: "🕐" }, { w: "cloud", e: "☁️" },
+        { w: "grapes", e: "🍇" }, { w: "flower", e: "🌸" }, { w: "banana", e: "🍌" },
+        { w: "rabbit", e: "🐰" }, { w: "orange", e: "🍊" }
+      ]
+    ];
+    // per-level settings: show faint model word? how many distractor tiles?
+    var CFG = [ { model: true, distract: 0 }, { model: true, distract: 2 }, { model: false, distract: 3 } ];
+
+    var stage = document.getElementById("stage");
+    var starsEl = document.getElementById("stars");
+    var levelBtns = document.querySelectorAll(".level-btn");
+
+    var stars = 0;
+    var level = 0;
+    var cur = null;      // current word object
+    var placed = 0;      // letters placed so far
+    var order = [];      // shuffled word list order for this level
+    var orderPos = 0;
+
+    /* ---------- speech ---------- */
+    var voice = null;
+    function pickVoice() {
+      try {
+        var vs = window.speechSynthesis.getVoices();
+        for (var i = 0; i < vs.length; i++) { if (/en[-_]/i.test(vs[i].lang)) { voice = vs[i]; break; } }
+        if (!voice && vs.length) voice = vs[0];
+      } catch (e) {}
+    }
+    if ("speechSynthesis" in window) { pickVoice(); window.speechSynthesis.onvoiceschanged = pickVoice; }
+    function say(text, rate) {
+      if (!("speechSynthesis" in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = rate || 0.85; u.pitch = 1.15;
+        if (voice) u.voice = voice;
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+    function spell(word) {
+      // "c - a - t ... cat"
+      var s = word.split("").join(", ");
+      say(s + ". " + word + ".", 0.8);
+    }
+
+    /* ---------- chime ---------- */
+    var actx = null;
+    function chime(good) {
+      try {
+        actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+        var notes = good ? [523, 659, 784] : [330, 262];
+        notes.forEach(function (f, i) {
+          var o = actx.createOscillator(), g = actx.createGain();
+          o.type = "sine"; o.frequency.value = f;
+          o.connect(g); g.connect(actx.destination);
+          var t = actx.currentTime + i * 0.12;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+          o.start(t); o.stop(t + 0.24);
+        });
+      } catch (e) {}
+    }
+    function burstConfetti() {
+      var emojis = ["⭐", "🌟", "✨", "🎉", "🎊", "🌼"];
+      for (var i = 0; i < 18; i++) {
+        var el = document.createElement("div");
+        el.className = "confetti";
+        el.textContent = emojis[i % emojis.length];
+        el.style.left = (Math.random() * 100) + "vw";
+        el.style.animationDuration = (1.6 + Math.random() * 1.4) + "s";
+        el.style.fontSize = (22 + Math.random() * 22) + "px";
+        document.body.appendChild(el);
+        (function (n) { setTimeout(function () { n.remove(); }, 3200); })(el);
+      }
+    }
+    function setStars(n) { stars = n; starsEl.innerHTML = "⭐ " + stars; }
+
+    function shuffle(a) {
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+
+    var ALPHA = "abcdefghijklmnopqrstuvwxyz".split("");
+
+    function nextWord() {
+      if (orderPos >= order.length) { order = shuffle(order); orderPos = 0; }
+      cur = order[orderPos++];
+      placed = 0;
+      render();
+      setTimeout(function () { say(cur.w, 0.85); }, 250);
+    }
+
+    function render() {
+      var cfg = CFG[level];
+      var letters = cur.w.split("");
+
+      // build letter bank: needed letters + distractors, each a unique tile
+      var tiles = letters.map(function (ch, i) { return { ch: ch, id: "n" + i, used: false }; });
+      for (var d = 0; d < cfg.distract; d++) {
+        var r;
+        do { r = ALPHA[Math.floor(Math.random() * 26)]; } while (letters.indexOf(r) !== -1 && cfg.distract < 6);
+        tiles.push({ ch: r, id: "d" + d, used: false });
+      }
+      shuffle(tiles);
+
+      var html = "";
+      html += '<div class="pic" id="pic" aria-label="picture">' + cur.e + '</div>';
+      html += '<p class="model">' + (cfg.model ? cur.w : "") + '</p>';
+
+      html += '<div class="slots" id="slots">';
+      for (var s = 0; s < letters.length; s++) {
+        html += '<div class="slot" data-i="' + s + '"></div>';
+      }
+      html += '</div>';
+
+      html += '<div class="bank" id="bank">';
+      tiles.forEach(function (t) {
+        html += '<button class="tile" data-id="' + t.id + '" data-ch="' + t.ch + '">' + t.ch + '</button>';
+      });
+      html += '</div>';
+
+      html += '<div class="controls">' +
+                '<button class="ctl-btn" id="hear">&#x1F50A; Hear word</button>' +
+                '<button class="ctl-btn soft" id="spell">&#x1F521; Spell it</button>' +
+              '</div>';
+
+      stage.innerHTML = html;
+
+      document.getElementById("pic").onclick = function () { say(cur.w, 0.85); };
+      document.getElementById("hear").onclick = function () { say(cur.w, 0.85); };
+      document.getElementById("spell").onclick = function () { spell(cur.w); };
+
+      var slots = stage.querySelectorAll(".slot");
+      var tileEls = stage.querySelectorAll(".tile");
+      tileEls.forEach(function (tEl) {
+        tEl.onclick = function () {
+          if (placed >= letters.length) return;
+          var need = letters[placed];
+          if (tEl.getAttribute("data-ch") === need && !tEl.classList.contains("used")) {
+            tEl.classList.add("used");
+            var slot = slots[placed];
+            slot.textContent = need;
+            slot.classList.add("filled");
+            placed++;
+            say(need, 1.0);
+            if (placed === letters.length) {
+              chime(true);
+              burstConfetti();
+              setStars(stars + 1);
+              setTimeout(function () { say("Yes! " + cur.w + "!", 0.85); }, 350);
+              setTimeout(nextWord, 2000);
+            }
+          } else if (!tEl.classList.contains("used")) {
+            tEl.classList.add("wrong");
+            chime(false);
+            setTimeout(function () { tEl.classList.remove("wrong"); }, 450);
+          }
+        };
+      });
+    }
+
+    function setLevel(l) {
+      level = l;
+      levelBtns.forEach(function (b) { b.classList.toggle("active", +b.getAttribute("data-lvl") === l); });
+      order = shuffle(LEVELS[l].slice());
+      orderPos = 0;
+      nextWord();
+    }
+    levelBtns.forEach(function (b) {
+      b.onclick = function () { setLevel(+b.getAttribute("data-lvl")); };
+    });
+
+    // start
+    order = shuffle(LEVELS[0].slice());
+    nextWord();
+  })();
+  </script>
+</body>
+</html>
