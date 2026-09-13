@@ -26,7 +26,10 @@ body {
     radial-gradient(circle at 20% 10%, rgba(200,161,75,0.18), transparent 40%),
     radial-gradient(circle at 80% 90%, rgba(122,29,29,0.10), transparent 40%),
     linear-gradient(180deg, var(--parchment-light), var(--parchment));
-  min-height: 100%; overflow-x: hidden;
+  background-attachment: fixed;   /* anchor to viewport so the gradient paints once — no seam/shade line while scrolling */
+  background-size: cover;
+  background-repeat: no-repeat;
+  min-height: 100vh; overflow-x: hidden;
   display: flex; flex-direction: column;
   user-select: none; -webkit-user-select: none;
 }
