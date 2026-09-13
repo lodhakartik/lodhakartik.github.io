@@ -61,6 +61,9 @@ window.LW = (function () {
   function addBadge(b) { var p = Store.current(); if (!p) return false; if (p.badges.indexOf(b) === -1) { p.badges.push(b); Store.save(); return true; } return false; }
   function setProg(key, val) { var p = Store.current(); if (!p) return; p.prog[key] = val; Store.save(); }
   function getProg(key, dflt) { var p = Store.current(); if (!p) return dflt; return (key in p.prog) ? p.prog[key] : dflt; }
+  // per-skill counters (used for badges + reporting from classic games)
+  function bumpStat(key, by) { var p = Store.current(); if (!p) return; p.prog.stats = p.prog.stats || {}; p.prog.stats[key] = (p.prog.stats[key] || 0) + (by || 1); Store.save(); }
+  function stats() { var p = Store.current(); return (p && p.prog.stats) || {}; }
 
   /* ---------------- Speech ---------------- */
   var voice = null;
@@ -135,7 +138,10 @@ window.LW = (function () {
       var T = opts.build(target, n);
       trials++;
 
+      var mpct = Math.round(trials / LEN * 100);
       mount.innerHTML =
+        '<div class="mini-wrap"><div class="mini-bar"><div class="mini-fill" style="width:' + mpct + '%"></div></div>' +
+          '<span class="mini-txt">' + trials + ' / ' + LEN + '</span></div>' +
         '<p class="prompt">' + T.prompt + '</p>' +
         '<div class="stim" id="lwstim">' + T.stim + '</div>' +
         '<button class="replay" id="lwreplay">🔊 Hear again</button>' +
@@ -184,7 +190,7 @@ window.LW = (function () {
     Store: Store,
     levelInfo: levelInfo, petStage: petStage,
     awardXP: awardXP, addStar: addStar, addSticker: addSticker, addBadge: addBadge,
-    setProg: setProg, getProg: getProg,
+    setProg: setProg, getProg: getProg, bumpStat: bumpStat, stats: stats,
     say: say, chime: chime, fanfare: fanfare, confetti: confetti,
     shuffle: shuffle, pickN: pickN,
     runQuiz: runQuiz

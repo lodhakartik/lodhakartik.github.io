@@ -89,6 +89,8 @@
     @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: 0.9; } }
     footer { text-align: center; font-size: 12px; color: var(--ink-soft); opacity: 0.7; padding: 4px 0 14px; }
   </style>
+  <script src="../../learn/engine.js"></script>
+  <script src="../../learn/bridge.js"></script>
 </head>
 <body>
   <div class="topbar">
@@ -151,7 +153,7 @@
     /* ---------- stars ---------- */
     var SKEY = "wa_stars_v1";
     var stars = 0; try { stars = parseInt(localStorage.getItem(SKEY), 10) || 0; } catch (e) {}
-    function setStars(n) { stars = n; document.getElementById("stars").innerHTML = "⭐ " + stars; try { localStorage.setItem(SKEY, String(stars)); } catch (e) {} }
+    function setStars(n) { stars = n; document.getElementById("stars").innerHTML = "⭐ " + stars; try { localStorage.setItem(SKEY, String(stars)); } catch (e) {} if (window.LWB) LWB.onStars(n, "vocab", 3); }
     setStars(stars);
 
     /* ---------- speech ---------- */

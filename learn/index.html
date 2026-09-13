@@ -87,6 +87,36 @@
     var BUDDIES = ["🐣","🐱","🐶","🦉","🐲","🐰","🦁","🐼"];
     var STICKERS = ["🌈","🚀","🦋","🌻","🍭","🐢","🎈","🏆","🌟","🦄","🍩","⚡","🌙","🐬","🎨","🧸","🌸","🍀"];
 
+    /* ---------- badges (milestones -> "I accomplished it!" feeling) ---------- */
+    var BADGES = [
+      { id:"start",    icon:"🌱", name:"First Steps",   desc:"Finished an activity",   test:function (p,s) { return roundsTotal(s) >= 1; } },
+      { id:"reader",   icon:"📖", name:"Reader",        desc:"3 reading rounds",       test:function (p,s) { return (s.reading  || 0) >= 3; } },
+      { id:"listener", icon:"👂", name:"Listener",      desc:"3 sound rounds",         test:function (p,s) { return (s.listening|| 0) >= 3; } },
+      { id:"speaker",  icon:"🗣️", name:"Speaker",       desc:"2 speaking rounds",      test:function (p,s) { return (s.speaking || 0) >= 2; } },
+      { id:"writer",   icon:"✍️", name:"Writer",        desc:"2 tracing rounds",       test:function (p,s) { return (s.writing  || 0) >= 2; } },
+      { id:"wordwiz",  icon:"🧩", name:"Word Wizard",   desc:"3 word rounds",          test:function (p,s) { return (s.vocab    || 0) >= 3; } },
+      { id:"lvl3",     icon:"🥉", name:"Rising Star",   desc:"Reached Level 3",        test:function (p)   { return LW.levelInfo(p.xp).level >= 3; } },
+      { id:"lvl5",     icon:"🥈", name:"Super Learner", desc:"Reached Level 5",        test:function (p)   { return LW.levelInfo(p.xp).level >= 5; } },
+      { id:"lvl10",    icon:"🥇", name:"Champion",      desc:"Reached Level 10",       test:function (p)   { return LW.levelInfo(p.xp).level >= 10; } },
+      { id:"stars25",  icon:"⭐", name:"Star Collector",desc:"Earned 25 stars",        test:function (p)   { return p.stars >= 25; } },
+      { id:"stars75",  icon:"🌠", name:"Star Master",   desc:"Earned 75 stars",        test:function (p)   { return p.stars >= 75; } },
+      { id:"stick10",  icon:"🎟️", name:"Sticker Star",  desc:"Got 10 stickers",        test:function (p)   { return p.stickers.length >= 10; } }
+    ];
+    var BADGE_BY_ID = {}; BADGES.forEach(function (b) { BADGE_BY_ID[b.id] = b; });
+    function roundsTotal(s) { var t = 0; ["reading","listening","speaking","writing","vocab"].forEach(function (k) { t += (s[k] || 0); }); return t; }
+    function checkBadges() {
+      var p = LW.Store.current(); if (!p) return [];
+      var s = LW.stats(), earned = [];
+      BADGES.forEach(function (b) { if (p.badges.indexOf(b.id) === -1 && b.test(p, s)) { if (LW.addBadge(b.id)) earned.push(b); } });
+      return earned;
+    }
+    function newBadgeHTML(list) {
+      if (!list || !list.length) return "";
+      return '<p style="margin:10px 0 2px;font-weight:700;color:var(--maroon)">🎉 New badge!</p><div class="new-badge-row">' +
+        list.map(function (b) { return '<span class="nb">' + b.icon + " " + b.name + '</span>'; }).join("") + '</div>';
+    }
+    function skillKey(skill) { return skill === "Vocabulary" ? "vocab" : skill.toLowerCase(); }
+
     var NODES = [
       { id:"letters",      title:"Alphabet",         emoji:"🔤", skill:"Reading",    kind:"link", url:"../games/alphabet-tap/" },
       { id:"sounds",       title:"Sound Play",       emoji:"🔊", skill:"Listening",  kind:"quiz", quiz:"letterSound" },
@@ -219,16 +249,20 @@
       if (!p) { renderGate(); return; }
       btnSwitch.style.visibility = "visible";
       var li = LW.levelInfo(p.xp);
+      var toNext = li.span - li.into;
       var head =
         '<div class="hub-head"><div class="buddy-row">' +
           petHTML(p, false) +
           '<div class="buddy-info">' +
             '<p class="buddy-name">' + p.name + '</p>' +
-            '<div class="xp-wrap"><span class="lvl-chip">Lvl ' + li.level + '</span>' +
-              '<div class="xp-bar"><div class="xp-fill" style="width:' + li.pct + '%"></div></div></div>' +
-            '<div class="counts">⭐ ' + p.stars + ' stars &middot; 🎟️ ' + p.stickers.length + ' stickers</div>' +
+            '<div class="counts">⭐ ' + p.stars + ' stars &middot; 🎟️ ' + p.stickers.length + ' stickers &middot; 🏅 ' + p.badges.length + ' badges</div>' +
           '</div>' +
           '<button class="n-go link" id="rewards-btn">🎁</button>' +
+        '</div>' +
+        '<div class="level-panel">' +
+          '<div class="lp-top"><span class="lp-lvl">Level ' + li.level + '</span><span class="lp-xp">' + li.into + ' / ' + li.span + ' XP</span></div>' +
+          '<div class="xp-bar big"><div class="xp-fill" style="width:' + li.pct + '%"></div></div>' +
+          '<div class="lp-next">✨ ' + toNext + ' more XP to reach Level ' + (li.level + 1) + '</div>' +
         '</div></div>';
       var nodes = '<div class="path">';
       NODES.forEach(function (nd) {
@@ -281,10 +315,12 @@
         xpPerCorrect: 4,
         build: spec.build,
         onDone: function (summary) {
+          LW.bumpStat(skillKey(nd.skill));
           var newSticker = null;
           var p = LW.Store.current();
           var pool = STICKERS.filter(function (s) { return p.stickers.indexOf(s) === -1; });
           if (pool.length) { newSticker = pool[Math.floor(Math.random() * pool.length)]; LW.addSticker(newSticker); }
+          var newBadges = checkBadges();
           p = LW.Store.current();
           LW.fanfare(); LW.confetti(28);
           var li = LW.levelInfo(p.xp);
@@ -294,6 +330,7 @@
               '<h2>' + (summary.leveledUp ? "Level " + li.level + "!" : "Great job!") + '</h2>' +
               '<p>You got <b>' + summary.correct + '</b> right and earned <b>+' + summary.xp + ' XP</b>.' +
                  (newSticker ? '<br>New sticker: <span style="font-size:34px">' + newSticker + '</span>' : '') + '</p>' +
+              newBadgeHTML(newBadges) +
               '<button class="btn" id="again">Play again</button> ' +
               '<button class="btn ghost" id="back">Back to map</button>' +
             '</div></div>';
@@ -312,13 +349,49 @@
       for (var i = 0; i < total; i++) {
         cells += owned[i] ? '<div class="sticker">' + owned[i] + '</div>' : '<div class="sticker empty">?</div>';
       }
+      var badgeCells = BADGES.map(function (b) {
+        var have = p.badges.indexOf(b.id) !== -1;
+        return '<div class="badge' + (have ? "" : " locked") + '">' +
+                 '<div class="b-icon">' + b.icon + '</div>' +
+                 '<div class="b-name">' + b.name + '</div>' +
+                 '<div class="b-desc">' + (have ? b.desc : "🔒 Locked") + '</div></div>';
+      }).join("");
       app.innerHTML =
         '<div class="center">' + petHTML(p, true) + '</div>' +
         '<p class="prompt center">' + p.name + ' &middot; Level ' + li.level + '</p>' +
-        '<p class="center counts">⭐ ' + p.stars + ' stars &middot; 🎟️ ' + owned.length + ' / ' + total + ' stickers</p>' +
+        '<p class="center counts">⭐ ' + p.stars + ' stars &middot; 🎟️ ' + owned.length + ' / ' + total + ' stickers &middot; 🏅 ' + p.badges.length + ' / ' + BADGES.length + ' badges</p>' +
+        '<p class="prompt center" style="font-size:20px;margin-top:14px">🏅 Badges</p>' +
+        '<div class="badge-grid">' + badgeCells + '</div>' +
+        '<p class="prompt center" style="font-size:20px;margin-top:14px">🎟️ Sticker album</p>' +
         '<div class="sticker-grid">' + cells + '</div>' +
-        '<div class="center" style="margin-top:16px"><button class="btn" id="back">← Back to map</button></div>';
+        '<div class="center" style="margin-top:18px">' +
+          '<button class="btn soft" id="cert">🏆 My certificate</button> ' +
+          '<button class="btn" id="back">← Back to map</button></div>';
       app.querySelector("#back").onclick = renderMap;
+      app.querySelector("#cert").onclick = renderCertificate;
+    }
+
+    function renderCertificate() {
+      var p = LW.Store.current();
+      var li = LW.levelInfo(p.xp);
+      var earned = p.badges.map(function (id) { return BADGE_BY_ID[id]; }).filter(Boolean);
+      var badgeIcons = earned.length ? earned.map(function (b) { return b.icon; }).join(" ") : "🌱";
+      app.innerHTML =
+        '<div class="cert" id="cert">' +
+          '<div class="c-seal">🏆</div>' +
+          '<div class="c-title">Certificate of Achievement</div>' +
+          '<div class="c-sub">Learning World &middot; a reading adventure</div>' +
+          '<div class="c-name">' + p.pet + " " + p.name + '</div>' +
+          '<div class="c-line">has reached <b>Level ' + li.level + '</b> &mdash; earning <b>' + p.stars + '</b> stars, ' +
+            '<b>' + p.stickers.length + '</b> stickers and <b>' + earned.length + '</b> badges!</div>' +
+          '<div class="c-badges">' + badgeIcons + '</div>' +
+          '<div class="c-foot"><span>Awarded by<b>Learning World</b></span><span>Keep it up!<b>' + p.pet + '</b></span></div>' +
+        '</div>' +
+        '<div class="center no-print" style="margin-top:16px">' +
+          '<button class="btn soft" id="print">🖨️ Print / Save</button> ' +
+          '<button class="btn" id="back">← Back</button></div>';
+      app.querySelector("#print").onclick = function () { window.print(); };
+      app.querySelector("#back").onclick = renderRewards;
     }
 
     function renderSettings() {
@@ -357,15 +430,18 @@
       var pos = 0, roundStars = 0, roundXP = 0;
 
       function done() {
+        LW.bumpStat("writing");
         var newSticker = null;
         var p = LW.Store.current();
         var pool = STICKERS.filter(function (s) { return p.stickers.indexOf(s) === -1; });
         if (pool.length) { newSticker = pool[Math.floor(Math.random() * pool.length)]; LW.addSticker(newSticker); }
+        var newBadges = checkBadges();
         LW.fanfare(); LW.confetti(28);
         app.innerHTML =
           '<div class="overlay"><div class="card">' +
             '<p class="big">✍️</p><h2>You wrote ' + SESSION_LETTERS + ' letters!</h2>' +
             '<p>+' + roundXP + ' XP earned.' + (newSticker ? '<br>New sticker: <span style="font-size:34px">' + newSticker + '</span>' : '') + '</p>' +
+            newBadgeHTML(newBadges) +
             '<button class="btn" id="again">Trace more</button> <button class="btn ghost" id="back">Back to map</button>' +
           '</div></div>';
         app.querySelector("#again").onclick = renderWrite;
@@ -377,7 +453,10 @@
         var d = session[pos];
         var starStr = "";
         for (var s = 0; s < PASSES; s++) starStr += "☆";
+        var mp = Math.round(pos / session.length * 100);
         app.innerHTML =
+          '<div class="mini-wrap"><div class="mini-bar"><div class="mini-fill" style="width:' + mp + '%"></div></div>' +
+            '<span class="mini-txt">Letter ' + (pos + 1) + ' / ' + session.length + '</span></div>' +
           '<p class="prompt center">Trace the letter — say "' + d.s + '"</p>' +
           '<p class="w-letter" id="wl">' + d.L.toUpperCase() + '<span class="lower">' + d.L + '</span> &middot; ' + d.key + ' ' + d.e + '</p>' +
           '<div class="stars-row" id="stars">' + starStr + '</div>' +
@@ -472,16 +551,19 @@
       var pos = 0, roundXP = 0;
 
       function done() {
+        LW.bumpStat("speaking");
         var newSticker = null;
         var p = LW.Store.current();
         var pool = STICKERS.filter(function (s) { return p.stickers.indexOf(s) === -1; });
         if (pool.length) { newSticker = pool[Math.floor(Math.random() * pool.length)]; LW.addSticker(newSticker); }
+        var newBadges = checkBadges();
         LW.fanfare(); LW.confetti(28);
         app.innerHTML =
           '<div class="overlay"><div class="card">' +
             '<p class="big">🗣️</p><h2>Super speaking!</h2>' +
             '<p>You said <b>' + items.length + '</b> words &middot; +' + roundXP + ' XP.' +
               (newSticker ? '<br>New sticker: <span style="font-size:34px">' + newSticker + '</span>' : '') + '</p>' +
+            newBadgeHTML(newBadges) +
             '<button class="btn" id="again">Say more</button> <button class="btn ghost" id="back">Back to map</button>' +
           '</div></div>';
         app.querySelector("#again").onclick = renderSpeak;
@@ -491,15 +573,17 @@
       function show() {
         if (pos >= items.length) { done(); return; }
         var d = items[pos];
+        var mp = Math.round(pos / items.length * 100);
         app.innerHTML =
+          '<div class="mini-wrap"><div class="mini-bar"><div class="mini-fill" style="width:' + mp + '%"></div></div>' +
+            '<span class="mini-txt">' + (pos + 1) + ' / ' + items.length + '</span></div>' +
           '<p class="prompt center">Listen, then say it out loud!</p>' +
           '<div class="stim" id="sstim"><div class="stim-emoji">' + d.e + '</div><div class="stim-word">' + d.w + '</div></div>' +
           '<div class="trace-tools">' +
             '<button class="btn ghost" id="hear">🔊 Hear</button>' +
             '<button class="btn ghost" id="slow">🐢 Slowly</button>' +
           '</div>' +
-          '<div class="center" style="margin-top:20px"><button class="btn big" id="said">🎤 I said it!</button></div>' +
-          '<p class="center counts" style="margin-top:12px">' + (pos + 1) + ' / ' + items.length + '</p>';
+          '<div class="center" style="margin-top:20px"><button class="btn big" id="said">🎤 I said it!</button></div>';
         setTimeout(function () { LW.say(d.w, 0.85); }, 300);
         document.getElementById("sstim").onclick = function () { LW.say(d.w, 0.85); };
         document.getElementById("hear").onclick = function () { LW.say(d.w, 0.85); };
