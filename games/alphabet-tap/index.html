@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Alphabet Tap &middot; Kartik Lodha</title>
+  <meta name="description" content="A gentle tap-and-listen ABC game for little ones. Learn every letter A to Z with a picture and a sound." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Fredoka:wght@500;600;700&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9;
+      --parchment:       #F2E2B1;
+      --parchment-dark:  #E5CE8A;
+      --maroon:          #7A1D1D;
+      --gold:            #C8A14B;
+      --gold-deep:       #8C6A1F;
+      --ink:             #3A1F0E;
+      --ink-soft:        #5C3A1F;
+      --green:           #2E7D32;
+      --shadow-soft: 0 2px 0 rgba(58, 31, 14, 0.10), 0 6px 18px rgba(58, 31, 14, 0.10);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: "Fredoka", "Patrick Hand", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(200, 161, 75, 0.18), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(122, 29, 29, 0.10), transparent 40%),
+        linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      min-height: 100%;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ---------- top bar ---------- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+    }
+    .home-link {
+      text-decoration: none;
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--gold-deep);
+      background: rgba(255, 248, 225, 0.7);
+      border: 1.5px solid var(--gold);
+      border-radius: 999px;
+      padding: 6px 16px;
+      white-space: nowrap;
+    }
+    .game-title {
+      font-family: "Caveat", cursive;
+      font-weight: 700;
+      font-size: 30px;
+      color: var(--maroon);
+      margin: 0;
+      text-align: center;
+      flex: 1;
+    }
+    .stars-badge {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--gold-deep);
+      background: rgba(255, 248, 225, 0.7);
+      border: 1.5px solid var(--gold);
+      border-radius: 999px;
+      padding: 6px 14px;
+      white-space: nowrap;
+      min-width: 66px;
+      text-align: center;
+    }
+
+    /* ---------- mode toggle ---------- */
+    .mode-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 4px 0 8px;
+    }
+    .mode-btn {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      color: var(--ink-soft);
+      background: rgba(255, 255, 255, 0.55);
+      border: 2px solid var(--gold);
+      border-radius: 999px;
+      padding: 8px 24px;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+    }
+    .mode-btn.active {
+      background: var(--maroon);
+      color: #FFF8E7;
+    }
+    .mode-btn:active { transform: scale(0.95); }
+
+    /* ---------- stage ---------- */
+    .stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px 24px;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .prompt {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: clamp(22px, 5vw, 30px);
+      color: var(--ink-soft);
+      text-align: center;
+      margin: 0 0 16px;
+      min-height: 1.2em;
+    }
+
+    /* ---------- LEARN: big card ---------- */
+    .learn-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+    }
+    .arrow {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 700;
+      font-size: 40px;
+      color: #FFF8E7;
+      background: var(--gold);
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      flex: 0 0 auto;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      transition: transform 120ms ease, background 120ms ease;
+      line-height: 1;
+    }
+    .arrow:active { transform: scale(0.9); }
+    .arrow:hover { background: var(--gold-deep); }
+
+    .big-card {
+      background: rgba(255, 255, 255, 0.7);
+      border: 4px solid var(--gold);
+      border-radius: 28px;
+      box-shadow: var(--shadow-soft);
+      padding: 18px 12px 22px;
+      text-align: center;
+      cursor: pointer;
+      flex: 1 1 auto;
+      max-width: 420px;
+      transition: transform 150ms ease;
+    }
+    .big-card:active { transform: scale(0.97); }
+    .big-letter {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 700;
+      font-size: clamp(90px, 30vw, 180px);
+      line-height: 1;
+      color: var(--maroon);
+      margin: 0;
+    }
+    .big-letter .lower {
+      color: var(--gold-deep);
+      font-size: 0.55em;
+    }
+    .big-emoji { font-size: clamp(70px, 22vw, 130px); line-height: 1; margin: 6px 0; }
+    .big-word {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: clamp(28px, 8vw, 46px);
+      color: var(--ink);
+      margin: 0;
+    }
+    .tap-hint {
+      font-family: "Patrick Hand", cursive;
+      font-size: 18px;
+      color: var(--ink-soft);
+      opacity: 0.75;
+      margin-top: 10px;
+    }
+
+    /* ---------- FIND: choices ---------- */
+    .find-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 460px;
+    }
+    .choice {
+      font-family: "Fredoka", sans-serif;
+      font-weight: 700;
+      font-size: clamp(56px, 20vw, 96px);
+      color: var(--maroon);
+      background: rgba(255, 255, 255, 0.7);
+      border: 4px solid var(--gold);
+      border-radius: 24px;
+      aspect-ratio: 1 / 1;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+    }
+    .choice:active { transform: scale(0.94); }
+    .choice.correct { background: #d8f0d8; border-color: var(--green); color: var(--green); }
+    .choice.wrong { animation: shake 0.4s; border-color: var(--maroon); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-9px); }
+      40% { transform: translateX(9px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .say-btn {
+      margin-top: 20px;
+      font-family: "Fredoka", sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+      color: #FFF8E7;
+      background: var(--maroon);
+      border: none;
+      border-radius: 999px;
+      padding: 12px 28px;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+    }
+    .say-btn:active { transform: scale(0.95); }
+
+    /* ---------- confetti ---------- */
+    .confetti {
+      position: fixed;
+      top: -40px;
+      font-size: 28px;
+      pointer-events: none;
+      z-index: 50;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(540deg); opacity: 0.9; }
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-soft);
+      opacity: 0.7;
+      padding: 4px 0 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="home-link" href="../../index.html">&#x2190; Home</a>
+    <h1 class="game-title">Alphabet Tap</h1>
+    <span class="stars-badge" id="stars">&#x2B50; 0</span>
+  </div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-learn">&#x1F4D6; Learn</button>
+    <button class="mode-btn" id="mode-find">&#x1F50D; Find</button>
+  </div>
+
+  <div class="stage" id="stage"><!-- filled by JS --></div>
+
+  <footer>&#xA9; Kartik Lodha &middot; made with love for little learners</footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // A picture + word for every letter (clear, preschool-friendly)
+    var DATA = [
+      { L: "A", word: "Apple",      emoji: "🍎" },
+      { L: "B", word: "Ball",       emoji: "⚽" },
+      { L: "C", word: "Cat",        emoji: "🐱" },
+      { L: "D", word: "Dog",        emoji: "🐶" },
+      { L: "E", word: "Elephant",   emoji: "🐘" },
+      { L: "F", word: "Fish",       emoji: "🐟" },
+      { L: "G", word: "Goat",       emoji: "🐐" },
+      { L: "H", word: "Horse",      emoji: "🐎" },
+      { L: "I", word: "Ice cream",  emoji: "🍦" },
+      { L: "J", word: "Juice",      emoji: "🧃" },
+      { L: "K", word: "Kite",       emoji: "🪁" },
+      { L: "L", word: "Lion",       emoji: "🦁" },
+      { L: "M", word: "Monkey",     emoji: "🐵" },
+      { L: "N", word: "Nose",       emoji: "👃" },
+      { L: "O", word: "Owl",        emoji: "🦉" },
+      { L: "P", word: "Panda",      emoji: "🐼" },
+      { L: "Q", word: "Queen",      emoji: "👑" },
+      { L: "R", word: "Rabbit",     emoji: "🐰" },
+      { L: "S", word: "Sun",        emoji: "☀️" },
+      { L: "T", word: "Tiger",      emoji: "🐯" },
+      { L: "U", word: "Umbrella",   emoji: "☂️" },
+      { L: "V", word: "Van",        emoji: "🚐" },
+      { L: "W", word: "Whale",      emoji: "🐳" },
+      { L: "X", word: "Xylophone",  emoji: "🎹" },
+      { L: "Y", word: "Yo-yo",      emoji: "🪀" },
+      { L: "Z", word: "Zebra",      emoji: "🦓" }
+    ];
+
+    var stage = document.getElementById("stage");
+    var starsEl = document.getElementById("stars");
+    var btnLearn = document.getElementById("mode-learn");
+    var btnFind = document.getElementById("mode-find");
+
+    var stars = 0;
+    var idx = 0;         // learn index
+    var mode = "learn";
+    var findTarget = null;
+
+    /* ---------- speech ---------- */
+    var voice = null;
+    function pickVoice() {
+      try {
+        var vs = window.speechSynthesis.getVoices();
+        // prefer an English voice
+        for (var i = 0; i < vs.length; i++) {
+          if (/en[-_]/i.test(vs[i].lang)) { voice = vs[i]; break; }
+        }
+        if (!voice && vs.length) voice = vs[0];
+      } catch (e) {}
+    }
+    if ("speechSynthesis" in window) {
+      pickVoice();
+      window.speechSynthesis.onvoiceschanged = pickVoice;
+    }
+    function say(text) {
+      if (!("speechSynthesis" in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.85;
+        u.pitch = 1.15;
+        if (voice) u.voice = voice;
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    /* ---------- happy chime (WebAudio) ---------- */
+    var actx = null;
+    function chime(good) {
+      try {
+        actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+        var notes = good ? [523, 659, 784] : [330, 262];
+        notes.forEach(function (f, i) {
+          var o = actx.createOscillator(), g = actx.createGain();
+          o.type = "sine"; o.frequency.value = f;
+          o.connect(g); g.connect(actx.destination);
+          var t = actx.currentTime + i * 0.12;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+          o.start(t); o.stop(t + 0.24);
+        });
+      } catch (e) {}
+    }
+
+    function burstConfetti() {
+      var emojis = ["⭐", "🌟", "✨", "🎉", "🎊", "🌼"];
+      for (var i = 0; i < 18; i++) {
+        var el = document.createElement("div");
+        el.className = "confetti";
+        el.textContent = emojis[i % emojis.length];
+        el.style.left = (Math.random() * 100) + "vw";
+        el.style.animationDuration = (1.6 + Math.random() * 1.4) + "s";
+        el.style.fontSize = (22 + Math.random() * 22) + "px";
+        document.body.appendChild(el);
+        (function (node) { setTimeout(function () { node.remove(); }, 3200); })(el);
+      }
+    }
+
+    function setStars(n) { stars = n; starsEl.innerHTML = "⭐ " + stars; }
+
+    /* ---------- LEARN mode ---------- */
+    function renderLearn(speakIt) {
+      var d = DATA[idx];
+      stage.innerHTML =
+        '<p class="prompt">Tap the card to hear it!</p>' +
+        '<div class="learn-wrap">' +
+          '<button class="arrow" id="prev" aria-label="Previous">&#x2039;</button>' +
+          '<div class="big-card" id="card">' +
+            '<p class="big-letter">' + d.L + '<span class="lower">' + d.L.toLowerCase() + '</span></p>' +
+            '<div class="big-emoji">' + d.emoji + '</div>' +
+            '<p class="big-word">' + d.word + '</p>' +
+            '<p class="tap-hint">' + (idx + 1) + ' / 26</p>' +
+          '</div>' +
+          '<button class="arrow" id="next" aria-label="Next">&#x203A;</button>' +
+        '</div>';
+      document.getElementById("prev").onclick = function () { idx = (idx + 25) % 26; renderLearn(true); };
+      document.getElementById("next").onclick = function () { idx = (idx + 1) % 26; renderLearn(true); };
+      document.getElementById("card").onclick = function () { say(d.L + ". " + d.word + "."); };
+      if (speakIt) say(d.L + ". " + d.word + ".");
+    }
+
+    /* ---------- FIND mode ---------- */
+    function shuffle(a) {
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+    function newFindRound() {
+      var pool = shuffle(DATA.slice());
+      var choices = pool.slice(0, 4);
+      findTarget = choices[Math.floor(Math.random() * choices.length)];
+      choices = shuffle(choices);
+
+      var html =
+        '<p class="prompt">Find the letter &nbsp;<b style="color:var(--maroon);font-size:1.3em">' +
+        findTarget.L + '</b></p><div class="find-grid">';
+      choices.forEach(function (c) {
+        html += '<button class="choice" data-l="' + c.L + '">' + c.L + '</button>';
+      });
+      html += '</div><button class="say-btn" id="repeat">&#x1F50A; Say it again</button>';
+      stage.innerHTML = html;
+
+      say("Find the letter " + findTarget.L);
+      document.getElementById("repeat").onclick = function () { say("Find the letter " + findTarget.L); };
+
+      var btns = stage.querySelectorAll(".choice");
+      btns.forEach(function (b) {
+        b.onclick = function () {
+          if (b.getAttribute("data-l") === findTarget.L) {
+            b.classList.add("correct");
+            chime(true); burstConfetti();
+            say("Yes! " + findTarget.L + " for " + findTarget.word + "!");
+            setStars(stars + 1);
+            btns.forEach(function (x) { x.disabled = true; });
+            setTimeout(newFindRound, 1700);
+          } else {
+            b.classList.add("wrong");
+            chime(false);
+            say("Try again");
+            setTimeout(function () { b.classList.remove("wrong"); }, 450);
+          }
+        };
+      });
+    }
+
+    /* ---------- mode switching ---------- */
+    function setMode(m) {
+      mode = m;
+      btnLearn.classList.toggle("active", m === "learn");
+      btnFind.classList.toggle("active", m === "find");
+      if (m === "learn") renderLearn(true);
+      else newFindRound();
+    }
+    btnLearn.onclick = function () { setMode("learn"); };
+    btnFind.onclick = function () { setMode("find"); };
+
+    // start
+    renderLearn(false);
+  })();
+  </script>
+</body>
+</html>
