@@ -1,0 +1,101 @@
+/* ============================================================
+   Learning World — shared theme (single source of truth)
+   Parchment / gold / maroon, matching lodhakartik.github.io
+   ============================================================ */
+:root {
+  --parchment-light: #FBF1D9;
+  --parchment:       #F2E2B1;
+  --parchment-dark:  #E5CE8A;
+  --maroon:          #7A1D1D;
+  --maroon-deep:     #5C1414;
+  --gold:            #C8A14B;
+  --gold-deep:       #8C6A1F;
+  --ink:             #3A1F0E;
+  --ink-soft:        #5C3A1F;
+  --green:           #2E7D32;
+  --green-soft:      #d8f0d8;
+  --sky:             #6BA8C9;
+  --shadow-soft: 0 2px 0 rgba(58,31,14,0.10), 0 6px 18px rgba(58,31,14,0.10);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: "Fredoka","Patrick Hand",system-ui,sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(200,161,75,0.18), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(122,29,29,0.10), transparent 40%),
+    linear-gradient(180deg, var(--parchment-light), var(--parchment));
+  min-height: 100%; overflow-x: hidden;
+  display: flex; flex-direction: column;
+  user-select: none; -webkit-user-select: none;
+}
+
+/* ---- top bar ---- */
+.lw-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; }
+.lw-pill {
+  text-decoration: none; font-family: "Caveat", cursive; font-weight: 700; font-size: 22px;
+  color: var(--gold-deep); background: rgba(255,248,225,0.7); border: 1.5px solid var(--gold);
+  border-radius: 999px; padding: 6px 16px; white-space: nowrap; cursor: pointer;
+}
+.lw-title { font-family: "Caveat", cursive; font-weight: 700; font-size: 28px; color: var(--maroon); margin: 0; text-align: center; flex: 1; }
+
+/* ---- buttons ---- */
+.btn {
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 18px; color: #FFF8E7;
+  background: var(--maroon); border: none; border-radius: 999px; padding: 11px 24px;
+  cursor: pointer; box-shadow: var(--shadow-soft); transition: transform 120ms ease, background 120ms ease;
+}
+.btn:hover { background: var(--maroon-deep); }
+.btn:active { transform: scale(0.95); }
+.btn.soft { background: var(--gold); color: var(--ink); }
+.btn.ghost { background: rgba(255,255,255,0.6); color: var(--ink-soft); border: 2px solid var(--gold); }
+.btn.big { font-size: 24px; padding: 16px 40px; font-family: "Caveat", cursive; font-weight: 700; }
+
+/* ---- XP bar ---- */
+.xp-wrap { display: flex; align-items: center; gap: 10px; }
+.xp-bar { flex: 1; height: 16px; background: rgba(255,255,255,0.55); border: 2px solid var(--gold); border-radius: 999px; overflow: hidden; }
+.xp-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-deep)); width: 0%; transition: width 600ms ease; }
+.lvl-chip {
+  font-family: "Fredoka", sans-serif; font-weight: 700; font-size: 15px; color: #FFF8E7;
+  background: var(--maroon); border-radius: 999px; padding: 4px 12px; white-space: nowrap;
+}
+
+/* ---- cards / choices (used by activities via engine Quiz) ---- */
+.lw-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  padding: 4px 16px 28px; width: 100%; max-width: 680px; margin: 0 auto; }
+.prompt { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: clamp(19px, 5vw, 26px);
+  color: var(--ink-soft); text-align: center; margin: 6px 0 8px; min-height: 1.2em; }
+.stim { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.stim-letter { font-family: "Fredoka", sans-serif; font-weight: 700; font-size: clamp(70px, 22vw, 120px); line-height: 1; color: var(--maroon); }
+.stim-emoji { font-size: clamp(64px, 20vw, 110px); line-height: 1; }
+.stim-word { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: clamp(24px, 7vw, 36px); color: var(--ink); }
+.replay { font-size: 15px; color: var(--gold-deep); background: rgba(255,248,225,0.7); border: 1.5px solid var(--gold);
+  border-radius: 999px; padding: 5px 14px; cursor: pointer; margin: 4px 0; font-family: "Fredoka", sans-serif; }
+.choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; max-width: 440px; margin-top: 10px; }
+.choices.three { grid-template-columns: repeat(3, 1fr); max-width: 500px; }
+.choice { background: rgba(255,255,255,0.7); border: 4px solid var(--gold); border-radius: 22px; cursor: pointer;
+  box-shadow: var(--shadow-soft); transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+  display: flex; align-items: center; justify-content: center; aspect-ratio: 1/1;
+  font-family: "Fredoka", sans-serif; font-weight: 700; }
+.choice.pic { font-size: clamp(46px, 15vw, 76px); }
+.choice.ltr { font-size: clamp(48px, 16vw, 82px); color: var(--maroon); }
+.choice.wrd { font-size: clamp(22px, 6.5vw, 34px); color: var(--maroon); aspect-ratio: auto; padding: 20px 8px; }
+.choice:active { transform: scale(0.94); }
+.choice.correct { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+.choice.reveal { animation: pulse 0.8s ease-in-out infinite; border-color: var(--green); }
+.choice.wrong { animation: shake 0.4s; opacity: 0.4; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+
+/* ---- overlay / celebration ---- */
+.overlay { position: fixed; inset: 0; background: rgba(58,31,14,0.45); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px; }
+.overlay .card { background: var(--parchment-light); border: 4px solid var(--gold); border-radius: 24px; padding: 26px 24px; text-align: center; max-width: 380px; box-shadow: var(--shadow-soft); }
+.overlay h2 { font-family: "Caveat", cursive; font-size: 40px; color: var(--maroon); margin: 4px 0 8px; }
+.overlay p { font-size: 19px; color: var(--ink-soft); margin: 4px 0 16px; }
+.overlay .big { font-size: 72px; margin: 0; line-height: 1.1; }
+
+.confetti { position: fixed; top: -40px; font-size: 28px; pointer-events: none; z-index: 70; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: 0.9; } }
+
+footer { text-align: center; font-size: 12px; color: var(--ink-soft); opacity: 0.7; padding: 8px 0 16px; }
