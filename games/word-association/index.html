@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FFF8E7" />
+  <title>Word Association &middot; Kartik Lodha</title>
+  <meta name="description" content="Link sounds, letters, pictures and words: beginning sounds, first letters, picture-to-word and rhyming. Friendly, no-fail, and it drills the tricky ones again and again." />
+  <meta name="robots" content="noai, noimageai" />
+  <meta name="author" content="Kartik Lodha" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Fredoka:wght@500;600;700&display=swap" />
+
+  <style>
+    :root {
+      --parchment-light: #FBF1D9; --parchment: #F2E2B1; --parchment-dark: #E5CE8A;
+      --maroon: #7A1D1D; --gold: #C8A14B; --gold-deep: #8C6A1F;
+      --ink: #3A1F0E; --ink-soft: #5C3A1F; --green: #2E7D32; --green-soft: #d8f0d8;
+      --shadow-soft: 0 2px 0 rgba(58,31,14,0.10), 0 6px 18px rgba(58,31,14,0.10);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: "Fredoka","Patrick Hand",system-ui,sans-serif; color: var(--ink);
+      background: radial-gradient(circle at 20% 10%, rgba(200,161,75,0.18), transparent 40%),
+                  radial-gradient(circle at 80% 90%, rgba(122,29,29,0.10), transparent 40%),
+                  linear-gradient(180deg, var(--parchment-light), var(--parchment));
+      min-height: 100%; overflow-x: hidden; display: flex; flex-direction: column;
+      user-select: none; -webkit-user-select: none;
+    }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; }
+    .home-link { text-decoration: none; font-family: "Caveat", cursive; font-weight: 700; font-size: 22px;
+      color: var(--gold-deep); background: rgba(255,248,225,0.7); border: 1.5px solid var(--gold);
+      border-radius: 999px; padding: 6px 16px; white-space: nowrap; }
+    .game-title { font-family: "Caveat", cursive; font-weight: 700; font-size: 26px; color: var(--maroon); margin: 0; text-align: center; flex: 1; }
+    .stars-badge { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 18px; color: var(--gold-deep);
+      background: rgba(255,248,225,0.7); border: 1.5px solid var(--gold); border-radius: 999px;
+      padding: 6px 14px; white-space: nowrap; min-width: 66px; text-align: center; }
+
+    .mode-toggle { display: flex; justify-content: center; gap: 7px; margin: 4px 8px 8px; flex-wrap: wrap; }
+    .mode-btn { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 16px; color: var(--ink-soft);
+      background: rgba(255,255,255,0.55); border: 2px solid var(--gold); border-radius: 999px;
+      padding: 7px 15px; cursor: pointer; transition: transform 120ms ease, background 120ms ease, color 120ms ease; }
+    .mode-btn.active { background: var(--maroon); color: #FFF8E7; }
+    .mode-btn:active { transform: scale(0.95); }
+
+    .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      padding: 4px 16px 28px; width: 100%; max-width: 640px; margin: 0 auto; }
+    .prompt { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: clamp(19px, 5vw, 26px);
+      color: var(--ink-soft); text-align: center; margin: 6px 0 8px; min-height: 1.2em; }
+
+    /* stimulus */
+    .stim { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 4px; cursor: pointer; }
+    .stim-letter { font-family: "Fredoka", sans-serif; font-weight: 700; font-size: clamp(70px, 22vw, 120px); line-height: 1; color: var(--maroon); }
+    .stim-emoji { font-size: clamp(64px, 20vw, 110px); line-height: 1; }
+    .stim-word { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: clamp(24px, 7vw, 36px); color: var(--ink); }
+    .replay { font-size: 15px; color: var(--gold-deep); background: rgba(255,248,225,0.7); border: 1.5px solid var(--gold);
+      border-radius: 999px; padding: 5px 14px; cursor: pointer; margin: 2px 0 4px; font-family: "Fredoka", sans-serif; }
+
+    /* choices */
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; max-width: 440px; margin-top: 10px; }
+    .choices.three { grid-template-columns: repeat(3, 1fr); max-width: 500px; }
+    .choice { background: rgba(255,255,255,0.7); border: 4px solid var(--gold); border-radius: 22px; cursor: pointer;
+      box-shadow: var(--shadow-soft); transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      display: flex; align-items: center; justify-content: center; aspect-ratio: 1/1;
+      font-family: "Fredoka", sans-serif; font-weight: 700; }
+    .choice.pic { font-size: clamp(46px, 15vw, 76px); }
+    .choice.ltr { font-size: clamp(48px, 16vw, 82px); color: var(--maroon); }
+    .choice.wrd { font-size: clamp(22px, 6.5vw, 34px); color: var(--maroon); aspect-ratio: auto; padding: 20px 8px; }
+    .choice:active { transform: scale(0.94); }
+    .choice.correct { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+    .choice.reveal { animation: pulse 0.8s ease-in-out infinite; border-color: var(--green); }
+    .choice.wrong { animation: shake 0.4s; opacity: 0.4; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+
+    .overlay { position: fixed; inset: 0; background: rgba(58,31,14,0.45); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px; }
+    .overlay .card { background: var(--parchment-light); border: 4px solid var(--gold); border-radius: 24px; padding: 26px 24px; text-align: center; max-width: 360px; box-shadow: var(--shadow-soft); }
+    .overlay h2 { font-family: "Caveat", cursive; font-size: 40px; color: var(--maroon); margin: 4px 0 8px; }
+    .overlay p { font-size: 19px; color: var(--ink-soft); margin: 4px 0 16px; }
+    .overlay .big { font-size: 64px; margin: 0; }
+    .btn { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 18px; color: #FFF8E7; background: var(--maroon);
+      border: none; border-radius: 999px; padding: 10px 22px; cursor: pointer; box-shadow: var(--shadow-soft); }
+    .btn:active { transform: scale(0.95); }
+
+    .confetti { position: fixed; top: -40px; font-size: 28px; pointer-events: none; z-index: 70; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: 0.9; } }
+    footer { text-align: center; font-size: 12px; color: var(--ink-soft); opacity: 0.7; padding: 4px 0 14px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="home-link" href="../../index.html">&#x2190; Home</a>
+    <h1 class="game-title">Word Association</h1>
+    <span class="stars-badge" id="stars">&#x2B50; 0</span>
+  </div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-m="starts">&#x1F50A; Starts With</button>
+    <button class="mode-btn" data-m="firstletter">&#x1F524; First Letter</button>
+    <button class="mode-btn" data-m="pictureword">&#x1F5BC;&#xFE0F; Picture Word</button>
+    <button class="mode-btn" data-m="rhyme">&#x1F3B5; Rhymes</button>
+  </div>
+
+  <div class="stage" id="stage"></div>
+  <footer>&#xA9; Kartik Lodha &middot; made with love for little learners</footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // word bank: w=word, e=picture, L=first letter, fam=rhyme family (optional)
+    var WORDS = [
+      {w:"apple",e:"🍎",L:"a"}, {w:"ant",e:"🐜",L:"a"},
+      {w:"ball",e:"⚽",L:"b",fam:"all"}, {w:"bat",e:"🦇",L:"b",fam:"at"},
+      {w:"bee",e:"🐝",L:"b",fam:"ee"}, {w:"bug",e:"🐛",L:"b",fam:"ug"},
+      {w:"box",e:"📦",L:"b",fam:"ox"}, {w:"bun",e:"🍞",L:"b",fam:"un"},
+      {w:"cat",e:"🐱",L:"c",fam:"at"}, {w:"car",e:"🚗",L:"c",fam:"ar"},
+      {w:"cake",e:"🍰",L:"c",fam:"ake"}, {w:"cow",e:"🐄",L:"c"},
+      {w:"dog",e:"🐶",L:"d",fam:"og"}, {w:"duck",e:"🦆",L:"d"},
+      {w:"egg",e:"🥚",L:"e"}, {w:"fish",e:"🐟",L:"f"},
+      {w:"fox",e:"🦊",L:"f",fam:"ox"}, {w:"frog",e:"🐸",L:"f",fam:"og"},
+      {w:"goat",e:"🐐",L:"g"}, {w:"hat",e:"🎩",L:"h",fam:"at"},
+      {w:"jar",e:"🫙",L:"j",fam:"ar"}, {w:"king",e:"🤴",L:"k",fam:"ing"},
+      {w:"kite",e:"🪁",L:"k"}, {w:"lion",e:"🦁",L:"l"},
+      {w:"monkey",e:"🐵",L:"m"}, {w:"mug",e:"☕",L:"m",fam:"ug"},
+      {w:"nose",e:"👃",L:"n"}, {w:"octopus",e:"🐙",L:"o"},
+      {w:"pig",e:"🐷",L:"p"}, {w:"queen",e:"👑",L:"q"},
+      {w:"rat",e:"🐀",L:"r",fam:"at"}, {w:"ring",e:"💍",L:"r",fam:"ing"},
+      {w:"snake",e:"🐍",L:"s",fam:"ake"}, {w:"star",e:"⭐",L:"s",fam:"ar"},
+      {w:"sun",e:"☀️",L:"s",fam:"un"}, {w:"tiger",e:"🐯",L:"t"},
+      {w:"tree",e:"🌳",L:"t",fam:"ee"}, {w:"umbrella",e:"☂️",L:"u"},
+      {w:"van",e:"🚐",L:"v"}, {w:"whale",e:"🐳",L:"w"},
+      {w:"wall",e:"🧱",L:"w",fam:"all"}, {w:"yo-yo",e:"🪀",L:"y"},
+      {w:"zebra",e:"🦓",L:"z"}
+    ];
+    var BYW = {}; WORDS.forEach(function (d) { BYW[d.w] = d; });
+    // rhyme families -> member words (only families with >=2 members are usable)
+    var FAM = {}; WORDS.forEach(function (d) { if (d.fam) { (FAM[d.fam] = FAM[d.fam] || []).push(d.w); } });
+    var RHYME_WORDS = WORDS.filter(function (d) { return d.fam && FAM[d.fam].length >= 2; });
+
+    // letter-sound approximations (anchored by the word when spoken)
+    var SND = { a:"aah",b:"buh",c:"kuh",d:"duh",e:"eh",f:"fff",g:"guh",h:"huh",i:"ih",j:"juh",
+      k:"kuh",l:"lll",m:"mmm",n:"nnn",o:"oh",p:"puh",q:"kwuh",r:"rrr",s:"sss",t:"tuh",
+      u:"uh",v:"vvv",w:"wuh",x:"kss",y:"yuh",z:"zzz" };
+
+    var ROUND_LEN = 12;
+
+    /* ---------- stars ---------- */
+    var SKEY = "wa_stars_v1";
+    var stars = 0; try { stars = parseInt(localStorage.getItem(SKEY), 10) || 0; } catch (e) {}
+    function setStars(n) { stars = n; document.getElementById("stars").innerHTML = "⭐ " + stars; try { localStorage.setItem(SKEY, String(stars)); } catch (e) {} }
+    setStars(stars);
+
+    /* ---------- speech ---------- */
+    var voice = null;
+    function pickVoice() { try { var vs = window.speechSynthesis.getVoices();
+      for (var i = 0; i < vs.length; i++) { if (/en[-_]/i.test(vs[i].lang)) { voice = vs[i]; break; } }
+      if (!voice && vs.length) voice = vs[0]; } catch (e) {} }
+    if ("speechSynthesis" in window) { pickVoice(); window.speechSynthesis.onvoiceschanged = pickVoice; }
+    function say(t, rate) { if (!("speechSynthesis" in window)) return;
+      try { window.speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t);
+        u.rate = rate || 0.85; u.pitch = 1.12; if (voice) u.voice = voice; window.speechSynthesis.speak(u); } catch (e) {} }
+
+    /* ---------- chime + confetti ---------- */
+    var actx = null;
+    function chime(good) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      var notes = good ? [523,659,784] : [392,330];
+      notes.forEach(function (f, i) { var o = actx.createOscillator(), g = actx.createGain();
+        o.type = "sine"; o.frequency.value = f; o.connect(g); g.connect(actx.destination);
+        var t = actx.currentTime + i * 0.11; g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+        o.start(t); o.stop(t + 0.22); }); } catch (e) {} }
+    function confetti(n) { var em = ["⭐","🌟","✨","🎉","🎊","🌼"];
+      for (var i = 0; i < (n||16); i++) { var el = document.createElement("div"); el.className = "confetti";
+        el.textContent = em[i % em.length]; el.style.left = (Math.random()*100)+"vw";
+        el.style.animationDuration = (1.6+Math.random()*1.4)+"s"; el.style.fontSize = (22+Math.random()*22)+"px";
+        document.body.appendChild(el); (function (x){ setTimeout(function(){ x.remove(); }, 3200); })(el); } }
+    function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+    function pickN(arr, n){ return shuffle(arr.slice()).slice(0, n); }
+
+    var stage = document.getElementById("stage");
+    var modeBtns = document.querySelectorAll(".mode-btn");
+
+    var mode = "starts";
+    var queue = [];
+    var roundTrials = 0, roundCorrect = 0, sessionStars = 0;
+
+    function eligible() { return mode === "rhyme" ? RHYME_WORDS.slice() : WORDS.slice(); }
+    function numChoices() { return Math.min(4, 2 + Math.floor(roundCorrect / 3)); }
+
+    function startRound() {
+      roundTrials = 0; roundCorrect = 0; sessionStars = 0;
+      queue = shuffle(eligible().map(function (d) { return d.w; }));
+      nextTrial();
+    }
+
+    // Build a trial descriptor for the current mode + target word
+    function buildTrial(target, n) {
+      var d = BYW[target];
+      if (mode === "starts") {
+        // show a letter's sound; tap the picture that starts with it
+        var distract = pickN(WORDS.filter(function (x){ return x.L !== d.L; }), n - 1);
+        var choices = shuffle([d].concat(distract)).map(function (x){ return { key:x.w, cls:"pic", html:x.e }; });
+        return {
+          stim: '<div class="stim-letter">' + d.L.toUpperCase() + '</div>',
+          prompt: "Which picture starts with this sound?",
+          sayStart: function(){ say("Which one starts with " + SND[d.L] + " ... " + d.L + "?", 0.82); },
+          choices: choices, correct: d.w,
+          winSay: function(){ say("Yes! " + d.w + " starts with " + SND[d.L] + "!", 0.82); },
+          fixSay: function(){ say("This one. " + d.w + ". " + SND[d.L] + ".", 0.8); }
+        };
+      }
+      if (mode === "firstletter") {
+        // show a picture; tap the letter it starts with
+        var others = shuffle(Object.keys(SND).filter(function (L){ return L !== d.L; }));
+        var letters = shuffle([d.L].concat(others.slice(0, n - 1)));
+        return {
+          stim: '<div class="stim-emoji">' + d.e + '</div><div class="stim-word">' + d.w + '</div>',
+          prompt: "What letter does it start with?",
+          sayStart: function(){ say(d.w + " ... what letter does it start with?", 0.85); },
+          choices: letters.map(function (L){ return { key:L, cls:"ltr", html:L }; }),
+          correct: d.L,
+          winSay: function(){ say("Yes! " + d.w + " starts with " + d.L + ".", 0.82); },
+          fixSay: function(){ say(d.w + " starts with " + d.L + ".", 0.8); }
+        };
+      }
+      if (mode === "pictureword") {
+        // show a picture; tap the matching written word
+        var dw = pickN(WORDS.filter(function (x){ return x.w !== d.w; }), n - 1);
+        return {
+          stim: '<div class="stim-emoji">' + d.e + '</div>',
+          prompt: "Which word matches the picture?",
+          sayStart: function(){ say("Which word is this? " + d.w + ".", 0.85); },
+          choices: shuffle([d].concat(dw)).map(function (x){ return { key:x.w, cls:"wrd", html:x.w }; }),
+          correct: d.w,
+          winSay: function(){ say("Yes! " + d.w + "!", 0.82); },
+          fixSay: function(){ say("This word is " + d.w + ".", 0.8); }
+        };
+      }
+      // rhyme: show a word; tap the picture that rhymes (same family)
+      var mates = FAM[d.fam].filter(function (w){ return w !== d.w; });
+      var partner = BYW[mates[Math.floor(Math.random() * mates.length)]];
+      var nonRhyme = pickN(WORDS.filter(function (x){ return x.fam !== d.fam; }), n - 1);
+      return {
+        stim: '<div class="stim-emoji">' + d.e + '</div><div class="stim-word">' + d.w + '</div>',
+        prompt: "Which picture rhymes with it?",
+        sayStart: function(){ say(d.w + " ... which one rhymes with " + d.w + "?", 0.85); },
+        choices: shuffle([partner].concat(nonRhyme)).map(function (x){ return { key:x.w, cls:"pic", html:x.e }; }),
+        correct: partner.w,
+        winSay: function(){ say(d.w + " and " + partner.w + " rhyme!", 0.82); },
+        fixSay: function(){ say(d.w + " rhymes with " + partner.w + ".", 0.8); }
+      };
+    }
+
+    function endRound() {
+      stage.innerHTML =
+        '<div class="overlay"><div class="card">' +
+          '<p class="big">🎉</p><h2>Great job!</h2>' +
+          '<p>You earned <b>⭐ ' + sessionStars + '</b> stars this round.</p>' +
+          '<button class="btn" id="more">Play again &#x2192;</button>' +
+        '</div></div>';
+      document.getElementById("more").onclick = startRound;
+      confetti(26);
+    }
+
+    function nextTrial() {
+      if (roundTrials >= ROUND_LEN) { endRound(); return; }
+      if (queue.length === 0) queue = shuffle(eligible().map(function (d){ return d.w; }));
+      var target = queue.shift();
+      var n = numChoices();
+      var T = buildTrial(target, n);
+      roundTrials++;
+
+      var html = '<p class="prompt">' + T.prompt + '</p>' +
+        '<div class="stim" id="stim">' + T.stim + '</div>' +
+        '<button class="replay" id="replay">&#x1F50A; Hear again</button>' +
+        '<div class="choices' + (T.choices.length === 3 ? ' three' : '') + '" id="choices"></div>';
+      stage.innerHTML = html;
+
+      var wrap = document.getElementById("choices");
+      T.choices.forEach(function (c) {
+        var b = document.createElement("button");
+        b.className = "choice " + c.cls; b.innerHTML = c.html; b.setAttribute("data-key", c.key);
+        wrap.appendChild(b);
+      });
+      document.getElementById("stim").onclick = T.sayStart;
+      document.getElementById("replay").onclick = T.sayStart;
+      setTimeout(T.sayStart, 300);
+
+      var answered = false, penalized = false;
+      wrap.querySelectorAll(".choice").forEach(function (tile) {
+        tile.onclick = function () {
+          if (answered) return;
+          if (tile.getAttribute("data-key") === T.correct) {
+            answered = true;
+            tile.classList.add("correct"); chime(true); confetti(14);
+            if (!penalized) { setStars(stars + 1); sessionStars++; roundCorrect++; T.winSay(); }
+            else { T.fixSay(); }
+            // spaced re-test: missed items come back sooner
+            var off = penalized ? 2 : 6;
+            queue.splice(Math.min(off, queue.length), 0, target);
+            setTimeout(nextTrial, 1500);
+          } else {
+            tile.classList.add("wrong"); tile.style.pointerEvents = "none"; chime(false);
+            penalized = true;
+            var ct = wrap.querySelector('[data-key="' + (window.CSS && CSS.escape ? CSS.escape(T.correct) : T.correct) + '"]');
+            if (ct) ct.classList.add("reveal");
+            T.fixSay();
+          }
+        };
+      });
+    }
+
+    function setMode(m) {
+      mode = m;
+      modeBtns.forEach(function (b){ b.classList.toggle("active", b.getAttribute("data-m") === m); });
+      startRound();
+    }
+    modeBtns.forEach(function (b){ b.onclick = function(){ setMode(b.getAttribute("data-m")); }; });
+
+    startRound();
+  })();
+  </script>
+</body>
+</html>
