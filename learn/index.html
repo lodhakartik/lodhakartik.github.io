@@ -56,6 +56,15 @@
       border-radius: 12px; padding: 10px; font-family: monospace; font-size: 12px; background: rgba(255,255,255,0.8); color: var(--ink); }
     .center { text-align: center; }
     .link-btn { background: none; border: none; color: var(--gold-deep); text-decoration: underline; cursor: pointer; font-size: 14px; margin: 6px; font-family: "Fredoka", sans-serif; }
+
+    /* writing / tracing */
+    .stars-row { font-size: 30px; letter-spacing: 4px; text-align: center; margin: 2px 0 6px; min-height: 34px; color: var(--gold); }
+    .w-letter { font-family: "Fredoka", sans-serif; font-weight: 700; font-size: clamp(30px, 8vw, 44px); color: var(--maroon); text-align: center; margin: 0; cursor: pointer; }
+    .w-letter .lower { color: var(--gold-deep); }
+    .trace-stack { position: relative; width: min(320px, 82vw); height: min(320px, 82vw); margin: 6px auto 0; }
+    .trace-stack canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 20px; touch-action: none; }
+    .trace-stack .ghost { background: rgba(255,255,255,0.55); border: 3px dashed var(--gold); }
+    .trace-tools { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -86,8 +95,8 @@
       { id:"buildwords",   title:"Build Words",      emoji:"🧩", skill:"Writing",    kind:"link", url:"../games/word-builder/" },
       { id:"wordlinks",    title:"Word Links",       emoji:"🔗", skill:"Vocabulary", kind:"link", url:"../games/word-association/" },
       { id:"readwords",    title:"Read Words",       emoji:"📖", skill:"Reading",    kind:"quiz", quiz:"pictureWord" },
-      { id:"speaking",     title:"Speaking",         emoji:"🗣️", skill:"Speaking",   kind:"soon" },
-      { id:"writing",      title:"Writing Pro",      emoji:"✍️", skill:"Writing",    kind:"soon" }
+      { id:"writing",      title:"Trace Letters",    emoji:"✍️", skill:"Writing",    kind:"write" },
+      { id:"speaking",     title:"Speaking",         emoji:"🗣️", skill:"Speaking",   kind:"soon" }
     ];
 
     /* ---------- native quiz builders (use shared engine + content) ---------- */
@@ -227,6 +236,8 @@
           nodes += node(nd, '<button class="n-go soon">Soon</button>');
         } else if (nd.kind === "link") {
           nodes += node(nd, '<button class="n-go link" data-link="' + nd.url + '">Play ↗</button>');
+        } else if (nd.kind === "write") {
+          nodes += node(nd, '<button class="n-go" data-write="1">Play →</button>');
         } else {
           nodes += node(nd, '<button class="n-go" data-quiz="' + nd.id + '">Play →</button>');
         }
@@ -242,6 +253,9 @@
       });
       app.querySelectorAll("[data-quiz]").forEach(function (b) {
         b.onclick = function () { renderPlay(b.getAttribute("data-quiz")); };
+      });
+      app.querySelectorAll("[data-write]").forEach(function (b) {
+        b.onclick = function () { renderWrite(); };
       });
     }
     function node(nd, goHTML) {
@@ -322,6 +336,128 @@
       app.querySelector("#del").onclick = function () {
         if (confirm("Delete " + p.name + "'s progress? This cannot be undone.")) { LW.Store.remove(p.id); renderGate(); }
       };
+    }
+
+    /* ---------- Writing: guided tracing with 5-star fading scaffold ---------- */
+    var SESSION_LETTERS = 5;   // letters per writing round
+    var PASSES = 5;            // stars per letter (fade to independence)
+    var CANVAS = 320;         // internal resolution
+
+    function renderWrite() {
+      btnSwitch.style.visibility = "hidden";
+      var letters = C.LETTERS;
+      var start = LW.getProg("writeIdx", 0) % letters.length;
+      var session = [];
+      for (var i = 0; i < SESSION_LETTERS; i++) session.push(letters[(start + i) % letters.length]);
+      var pos = 0, roundStars = 0, roundXP = 0;
+
+      function done() {
+        var newSticker = null;
+        var p = LW.Store.current();
+        var pool = STICKERS.filter(function (s) { return p.stickers.indexOf(s) === -1; });
+        if (pool.length) { newSticker = pool[Math.floor(Math.random() * pool.length)]; LW.addSticker(newSticker); }
+        LW.fanfare(); LW.confetti(28);
+        app.innerHTML =
+          '<div class="overlay"><div class="card">' +
+            '<p class="big">✍️</p><h2>You wrote ' + SESSION_LETTERS + ' letters!</h2>' +
+            '<p>+' + roundXP + ' XP earned.' + (newSticker ? '<br>New sticker: <span style="font-size:34px">' + newSticker + '</span>' : '') + '</p>' +
+            '<button class="btn" id="again">Trace more</button> <button class="btn ghost" id="back">Back to map</button>' +
+          '</div></div>';
+        app.querySelector("#again").onclick = renderWrite;
+        app.querySelector("#back").onclick = renderMap;
+      }
+
+      function showLetter() {
+        if (pos >= session.length) { done(); return; }
+        var d = session[pos];
+        var starStr = "";
+        for (var s = 0; s < PASSES; s++) starStr += "☆";
+        app.innerHTML =
+          '<p class="prompt center">Trace the letter — say "' + d.s + '"</p>' +
+          '<p class="w-letter" id="wl">' + d.L.toUpperCase() + '<span class="lower">' + d.L + '</span> &middot; ' + d.key + ' ' + d.e + '</p>' +
+          '<div class="stars-row" id="stars">' + starStr + '</div>' +
+          '<div class="trace-stack"><canvas class="ghost" id="cg" width="' + CANVAS + '" height="' + CANVAS + '"></canvas>' +
+          '<canvas id="ct" width="' + CANVAS + '" height="' + CANVAS + '"></canvas></div>' +
+          '<div class="trace-tools">' +
+            '<button class="btn" id="hear">🔊 Hear</button>' +
+            '<button class="btn ghost" id="clear">🔄 Clear</button>' +
+            '<button class="btn soft" id="skip">Next →</button>' +
+          '</div>';
+        LW.say(d.s + " ... " + d.key, 0.8);
+        setupTrace(d);
+        document.getElementById("wl").onclick = function () { LW.say(d.s + " ... " + d.key, 0.8); };
+        document.getElementById("hear").onclick = function () { LW.say(d.s + " ... " + d.key, 0.8); };
+        document.getElementById("skip").onclick = function () { pos++; showLetter(); };
+      }
+
+      function setupTrace(d) {
+        var cg = document.getElementById("cg"), ct = document.getElementById("ct");
+        var gx = cg.getContext("2d"), tx = ct.getContext("2d");
+        var font = "700 " + Math.floor(CANVAS * 0.72) + 'px "Fredoka", sans-serif';
+
+        // build a mask of the letter's pixels (for coverage detection)
+        var off = document.createElement("canvas"); off.width = CANVAS; off.height = CANVAS;
+        var ox = off.getContext("2d");
+        ox.font = font; ox.textAlign = "center"; ox.textBaseline = "middle";
+        ox.fillStyle = "#000"; ox.fillText(d.L, CANVAS / 2, CANVAS / 2 + CANVAS * 0.03);
+        var mdata = ox.getImageData(0, 0, CANVAS, CANVAS).data;
+        var mask = new Uint8Array(CANVAS * CANVAS), maskCount = 0;
+        for (var i = 0; i < mask.length; i++) { if (mdata[i * 4 + 3] > 100) { mask[i] = 1; maskCount++; } }
+
+        var passes = 0, ghostOp = 0.32;
+        function drawGhost() {
+          gx.clearRect(0, 0, CANVAS, CANVAS);
+          gx.font = font; gx.textAlign = "center"; gx.textBaseline = "middle";
+          gx.fillStyle = "rgba(200,161,75," + ghostOp + ")";
+          gx.fillText(d.L, CANVAS / 2, CANVAS / 2 + CANVAS * 0.03);
+        }
+        drawGhost();
+        tx.lineWidth = 24; tx.lineCap = "round"; tx.lineJoin = "round"; tx.strokeStyle = "#7A1D1D";
+
+        var drawing = false;
+        function P(ev) {
+          var r = ct.getBoundingClientRect(); var sc = CANVAS / r.width;
+          var pt = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+          return { x: (pt.clientX - r.left) * sc, y: (pt.clientY - r.top) * sc };
+        }
+        function down(ev) { ev.preventDefault(); drawing = true; try { ct.setPointerCapture(ev.pointerId); } catch (e) {}
+          var p = P(ev); tx.beginPath(); tx.moveTo(p.x, p.y); tx.lineTo(p.x + 0.1, p.y + 0.1); tx.stroke(); }
+        function move(ev) { if (!drawing) return; ev.preventDefault(); var p = P(ev); tx.lineTo(p.x, p.y); tx.stroke(); }
+        function up() { if (!drawing) return; drawing = false; checkPass(); }
+        ct.addEventListener("pointerdown", down);
+        ct.addEventListener("pointermove", move);
+        ct.addEventListener("pointerup", up);
+        ct.addEventListener("pointercancel", up);
+
+        function checkPass() {
+          var tdata = tx.getImageData(0, 0, CANVAS, CANVAS).data;
+          var hit = 0, drawn = 0;
+          for (var n = 0; n < mask.length; n++) {
+            if (tdata[n * 4 + 3] > 0) { drawn++; if (mask[n]) hit++; }
+          }
+          if (drawn < 150) return; // barely drew anything — ignore
+          var coverage = hit / maskCount;
+          if (coverage >= 0.35) { // lenient for little hands
+            passes++;
+            LW.chime(true); LW.confetti(8); LW.addStar(1);
+            var r = LW.awardXP(2); roundXP += 2; roundStars++;
+            document.getElementById("stars").textContent =
+              "★".repeat(passes) + "☆".repeat(Math.max(0, PASSES - passes));
+            tx.clearRect(0, 0, CANVAS, CANVAS);
+            ghostOp = Math.max(0.05, ghostOp * 0.7); drawGhost();
+            if (passes >= PASSES) {
+              LW.say("You wrote " + d.L + "! " + d.key + ".", 0.82);
+              LW.setProg("writeIdx", (LW.getProg("writeIdx", 0) + 1) % C.LETTERS.length);
+              setTimeout(function () { pos++; showLetter(); }, 1300);
+            }
+          } else {
+            LW.say("Try to trace over the " + d.L + ".", 0.85);
+          }
+        }
+        document.getElementById("clear").onclick = function () { tx.clearRect(0, 0, CANVAS, CANVAS); };
+      }
+
+      showLetter();
     }
 
     btnSwitch.onclick = renderGate;
