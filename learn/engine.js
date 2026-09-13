@@ -41,13 +41,17 @@ window.LW = (function () {
 
   /* ---------------- XP / levels / rewards ---------------- */
   var XP_PER_LEVEL = 40;
+  var MAX_LEVEL = 15;          // the "final level" — reaching it = graduation
   function levelInfo(xp) {
-    var lvl = 1 + Math.floor(xp / XP_PER_LEVEL);
+    var raw = 1 + Math.floor(xp / XP_PER_LEVEL);
+    if (raw >= MAX_LEVEL) {
+      return { level: MAX_LEVEL, into: XP_PER_LEVEL, span: XP_PER_LEVEL, pct: 100, max: true };
+    }
     var into = xp % XP_PER_LEVEL;
-    return { level: lvl, into: into, span: XP_PER_LEVEL, pct: Math.round(into / XP_PER_LEVEL * 100) };
+    return { level: raw, into: into, span: XP_PER_LEVEL, pct: Math.round(into / XP_PER_LEVEL * 100), max: false };
   }
-  // pet grows visually with level: extra sparkle/crown handled in UI; stage name here
-  function petStage(level) { return level >= 12 ? 3 : (level >= 6 ? 2 : (level >= 3 ? 1 : 0)); }
+  // pet grows visually with level: extra sparkle/crown/cap handled in UI; stage here
+  function petStage(level) { return level >= MAX_LEVEL ? 4 : (level >= 12 ? 3 : (level >= 6 ? 2 : (level >= 3 ? 1 : 0))); }
 
   function awardXP(n) {
     var p = Store.current(); if (!p) return { leveledUp: false };
@@ -188,7 +192,7 @@ window.LW = (function () {
   /* ---------------- public API ---------------- */
   return {
     Store: Store,
-    levelInfo: levelInfo, petStage: petStage,
+    levelInfo: levelInfo, petStage: petStage, MAX_LEVEL: MAX_LEVEL,
     awardXP: awardXP, addStar: addStar, addSticker: addSticker, addBadge: addBadge,
     setProg: setProg, getProg: getProg, bumpStat: bumpStat, stats: stats,
     say: say, chime: chime, fanfare: fanfare, confetti: confetti,

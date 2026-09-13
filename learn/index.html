@@ -95,12 +95,15 @@
       { id:"speaker",  icon:"🗣️", name:"Speaker",       desc:"2 speaking rounds",      test:function (p,s) { return (s.speaking || 0) >= 2; } },
       { id:"writer",   icon:"✍️", name:"Writer",        desc:"2 tracing rounds",       test:function (p,s) { return (s.writing  || 0) >= 2; } },
       { id:"wordwiz",  icon:"🧩", name:"Word Wizard",   desc:"3 word rounds",          test:function (p,s) { return (s.vocab    || 0) >= 3; } },
+      { id:"numbers",  icon:"🔢", name:"Number Whiz",   desc:"3 number rounds",        test:function (p,s) { return (s.numbers  || 0) >= 3; } },
+      { id:"blender",  icon:"🫧", name:"Sound Blender", desc:"2 blending rounds",      test:function (p,s) { return (s.phonics  || 0) >= 2; } },
       { id:"lvl3",     icon:"🥉", name:"Rising Star",   desc:"Reached Level 3",        test:function (p)   { return LW.levelInfo(p.xp).level >= 3; } },
       { id:"lvl5",     icon:"🥈", name:"Super Learner", desc:"Reached Level 5",        test:function (p)   { return LW.levelInfo(p.xp).level >= 5; } },
       { id:"lvl10",    icon:"🥇", name:"Champion",      desc:"Reached Level 10",       test:function (p)   { return LW.levelInfo(p.xp).level >= 10; } },
       { id:"stars25",  icon:"⭐", name:"Star Collector",desc:"Earned 25 stars",        test:function (p)   { return p.stars >= 25; } },
       { id:"stars75",  icon:"🌠", name:"Star Master",   desc:"Earned 75 stars",        test:function (p)   { return p.stars >= 75; } },
-      { id:"stick10",  icon:"🎟️", name:"Sticker Star",  desc:"Got 10 stickers",        test:function (p)   { return p.stickers.length >= 10; } }
+      { id:"stick10",  icon:"🎟️", name:"Sticker Star",  desc:"Got 10 stickers",        test:function (p)   { return p.stickers.length >= 10; } },
+      { id:"grad",     icon:"🎓", name:"Graduate",      desc:"Reached the top level!", test:function (p)   { return LW.levelInfo(p.xp).level >= LW.MAX_LEVEL; } }
     ];
     var BADGE_BY_ID = {}; BADGES.forEach(function (b) { BADGE_BY_ID[b.id] = b; });
     function roundsTotal(s) { var t = 0; ["reading","listening","speaking","writing","vocab"].forEach(function (k) { t += (s[k] || 0); }); return t; }
@@ -118,16 +121,31 @@
     function skillKey(skill) { return skill === "Vocabulary" ? "vocab" : skill.toLowerCase(); }
 
     var NODES = [
-      { id:"letters",      title:"Alphabet",         emoji:"🔤", skill:"Reading",    kind:"link", url:"../games/alphabet-tap/" },
-      { id:"sounds",       title:"Sound Play",       emoji:"🔊", skill:"Listening",  kind:"quiz", quiz:"letterSound" },
-      { id:"lettersounds", title:"Letters & Sounds", emoji:"📣", skill:"Phonics",    kind:"link", url:"../games/letters-sounds/" },
-      { id:"firstletter",  title:"First Letter",     emoji:"🅰️", skill:"Reading",    kind:"quiz", quiz:"firstLetter" },
-      { id:"buildwords",   title:"Build Words",      emoji:"🧩", skill:"Writing",    kind:"link", url:"../games/word-builder/" },
-      { id:"wordlinks",    title:"Word Links",       emoji:"🔗", skill:"Vocabulary", kind:"link", url:"../games/word-association/" },
-      { id:"readwords",    title:"Read Words",       emoji:"📖", skill:"Reading",    kind:"quiz", quiz:"pictureWord" },
-      { id:"writing",      title:"Trace Letters",    emoji:"✍️", skill:"Writing",    kind:"write" },
-      { id:"speaking",     title:"Say It!",          emoji:"🗣️", skill:"Speaking",   kind:"speak" }
+      { id:"letters",      title:"Alphabet",         emoji:"🔤", skill:"Reading",    lv:1, kind:"link", url:"../games/alphabet-tap/" },
+      { id:"sounds",       title:"Sound Play",       emoji:"🔊", skill:"Listening",  lv:1, kind:"quiz", quiz:"letterSound" },
+      { id:"lettersounds", title:"Letters & Sounds", emoji:"📣", skill:"Phonics",    lv:1, kind:"link", url:"../games/letters-sounds/" },
+      { id:"counting",     title:"Count It!",        emoji:"🔢", skill:"Numbers",    lv:1, kind:"quiz", quiz:"countBasic" },
+      { id:"firstletter",  title:"First Letter",     emoji:"🅰️", skill:"Reading",    lv:2, kind:"quiz", quiz:"firstLetter" },
+      { id:"speaking",     title:"Say It!",          emoji:"🗣️", skill:"Speaking",   lv:2, kind:"speak" },
+      { id:"writing",      title:"Trace Letters",    emoji:"✍️", skill:"Writing",    lv:3, kind:"write" },
+      { id:"buildwords",   title:"Build Words",      emoji:"🧩", skill:"Writing",    lv:3, kind:"link", url:"../games/word-builder/" },
+      { id:"readwords",    title:"Read Words",       emoji:"📖", skill:"Reading",    lv:4, kind:"quiz", quiz:"pictureWord" },
+      { id:"wordlinks",    title:"Word Links",       emoji:"🔗", skill:"Vocabulary", lv:4, kind:"link", url:"../games/word-association/" },
+      { id:"bignum",       title:"Big Numbers",      emoji:"🔟", skill:"Numbers",    lv:5, kind:"quiz", quiz:"countBig" },
+      { id:"blend",        title:"Blend It!",        emoji:"🫧", skill:"Phonics",    lv:6, kind:"quiz", quiz:"blend" },
+      { id:"sentences",    title:"Read a Sentence",  emoji:"📚", skill:"Reading",    lv:9, kind:"sentence" }
     ];
+    var NUM_EMOJI = ["🍎","⭐","🐟","🎈","🍪","🐝","🌸","🚗","🐤","🦋"];
+    var CVC = window.LWC.WORDS.filter(function (d) { return d.w.length === 3; }).map(function (d) { return d.w; });
+    var SENTENCES = [
+      { s:"The cat sat on a mat.", e:"🐱" },
+      { s:"A big red bus.",        e:"🚌" },
+      { s:"The dog is in the sun.",e:"🐶" },
+      { s:"I see a fox and a frog.",e:"🦊" },
+      { s:"The pig is in the mud.",e:"🐷" },
+      { s:"A bee sat on a bug.",   e:"🐝" }
+    ];
+    function numRange(a, b) { var r = []; for (var i = a; i <= b; i++) r.push(i); return r; }
 
     /* ---------- native quiz builders (use shared engine + content) ---------- */
     var C = window.LWC;
@@ -170,16 +188,51 @@
         fixSay: function () { LW.say("This word is " + d.w + ".", 0.8); }
       };
     }
+    function buildCount(num, n, maxN) {
+      var emoji = NUM_EMOJI[Math.floor(Math.random() * NUM_EMOJI.length)];
+      var group = ""; for (var i = 0; i < num; i++) group += emoji;
+      var pool = numRange(1, maxN).filter(function (x) { return x !== num; });
+      return {
+        prompt: "How many? Count them!",
+        stim: '<div class="num-group">' + group + '</div>',
+        sayStart: function () { LW.say("How many? Count them.", 0.9); },
+        choices: LW.shuffle([num].concat(LW.pickN(pool, n - 1))).map(function (k) { return { key: String(k), cls: "ltr", html: String(k) }; }),
+        correct: String(num),
+        winSay: function () { LW.say("Yes! " + num + "!", 0.85); },
+        fixSay: function () { LW.say("Let's count again. The answer is " + num + ".", 0.85); }
+      };
+    }
+    function sayBlend(word) {
+      var parts = word.split("").map(function (L) { return C.SND[L] || L; });
+      LW.say(parts.join(", ") + " ... " + word, 0.68);
+    }
+    function buildBlend(w, n) {
+      var d = C.BY_W[w];
+      var spelled = w.split("").join(" - ");
+      var distract = LW.pickN(CVC.filter(function (x) { return x !== w; }), n - 1).map(function (x) { return C.BY_W[x]; });
+      return {
+        prompt: "Blend the sounds — which picture?",
+        stim: '<div class="stim-letter" style="font-size:clamp(40px,13vw,72px)">' + spelled + '</div>',
+        sayStart: function () { sayBlend(w); },
+        choices: LW.shuffle([d].concat(distract)).map(function (x) { return { key: x.w, cls: "pic", html: x.e }; }),
+        correct: w,
+        winSay: function () { LW.say("Yes! " + d.w + "!", 0.85); },
+        fixSay: function () { LW.say("This one is " + d.w + ".", 0.82); }
+      };
+    }
     var QUIZ = {
       letterSound: { items: function () { return C.LETTERS.map(function (d) { return d.L; }); }, build: buildLetterSound },
       firstLetter: { items: function () { return C.WORDS.map(function (d) { return d.w; }); }, build: buildFirstLetter },
-      pictureWord: { items: function () { return C.WORDS.map(function (d) { return d.w; }); }, build: buildPictureWord }
+      pictureWord: { items: function () { return C.WORDS.map(function (d) { return d.w; }); }, build: buildPictureWord },
+      countBasic:  { items: function () { return numRange(1, 10); }, build: function (t, n) { return buildCount(t, n, 10); } },
+      countBig:    { items: function () { return numRange(1, 20); }, build: function (t, n) { return buildCount(t, n, 20); } },
+      blend:       { items: function () { return CVC.slice(); }, build: buildBlend }
     };
 
     /* ---------- views ---------- */
     function petHTML(p, big) {
       var stage = LW.petStage(LW.levelInfo(p.xp).level);
-      var crown = stage >= 2 ? '<span class="crown">👑</span>' : (stage >= 1 ? '<span class="crown">✨</span>' : "");
+      var crown = stage >= 4 ? '<span class="crown">🎓</span>' : (stage >= 2 ? '<span class="crown">👑</span>' : (stage >= 1 ? '<span class="crown">✨</span>' : ""));
       return '<div class="buddy" style="' + (big ? "font-size:72px" : "") + '">' + p.pet + crown + '</div>';
     }
 
@@ -260,20 +313,25 @@
           '<button class="n-go link" id="rewards-btn">🎁</button>' +
         '</div>' +
         '<div class="level-panel">' +
-          '<div class="lp-top"><span class="lp-lvl">Level ' + li.level + '</span><span class="lp-xp">' + li.into + ' / ' + li.span + ' XP</span></div>' +
+          '<div class="lp-top"><span class="lp-lvl">Level ' + li.level + (li.max ? " · MAX" : "") + '</span>' +
+            '<span class="lp-xp">' + (li.max ? "🎓 Top level" : (li.into + " / " + li.span + " XP")) + '</span></div>' +
           '<div class="xp-bar big"><div class="xp-fill" style="width:' + li.pct + '%"></div></div>' +
-          '<div class="lp-next">✨ ' + toNext + ' more XP to reach Level ' + (li.level + 1) + '</div>' +
+          '<div class="lp-next">' + (li.max
+            ? '<span class="grad-banner">🎓 Graduated! Print your certificate 🎉</span>'
+            : ('✨ ' + toNext + ' more XP to reach Level ' + (li.level + 1))) + '</div>' +
         '</div></div>';
       var nodes = '<div class="path">';
       NODES.forEach(function (nd) {
-        if (nd.kind === "soon") {
-          nodes += node(nd, '<button class="n-go soon">Soon</button>');
+        if ((nd.lv || 1) > li.level) {
+          nodes += node(nd, '<button class="n-go locked">🔒 Lvl ' + (nd.lv || 1) + '</button>', "locked");
         } else if (nd.kind === "link") {
           nodes += node(nd, '<button class="n-go link" data-link="' + nd.url + '">Play ↗</button>');
         } else if (nd.kind === "write") {
           nodes += node(nd, '<button class="n-go" data-write="1">Play →</button>');
         } else if (nd.kind === "speak") {
           nodes += node(nd, '<button class="n-go" data-speak="1">Play →</button>');
+        } else if (nd.kind === "sentence") {
+          nodes += node(nd, '<button class="n-go" data-sentence="1">Play →</button>');
         } else {
           nodes += node(nd, '<button class="n-go" data-quiz="' + nd.id + '">Play →</button>');
         }
@@ -296,9 +354,12 @@
       app.querySelectorAll("[data-speak]").forEach(function (b) {
         b.onclick = function () { renderSpeak(); };
       });
+      app.querySelectorAll("[data-sentence]").forEach(function (b) {
+        b.onclick = function () { renderSentence(); };
+      });
     }
-    function node(nd, goHTML) {
-      return '<div class="node' + (nd.kind === "soon" ? " soon" : "") + '">' +
+    function node(nd, goHTML, extraCls) {
+      return '<div class="node' + (extraCls ? " " + extraCls : "") + '">' +
                '<span class="n-emoji">' + nd.emoji + '</span>' +
                '<div class="n-body"><p class="n-title">' + nd.title + '</p><span class="n-skill">' + nd.skill + '</span></div>' +
                goHTML + '</div>';
@@ -593,6 +654,62 @@
           var r = LW.awardXP(3); roundXP += 3;
           LW.say("Great speaking! " + d.w + "!", 0.85);
           pos++; setTimeout(show, 1200);
+        };
+      }
+      show();
+    }
+
+    /* ---------- Sentences: read a short decodable sentence aloud ---------- */
+    function renderSentence() {
+      btnSwitch.style.visibility = "hidden";
+      var items = LW.shuffle(SENTENCES.slice()).slice(0, 5);
+      var pos = 0, roundXP = 0;
+
+      function done() {
+        LW.bumpStat("reading");
+        var newSticker = null;
+        var p = LW.Store.current();
+        var pool = STICKERS.filter(function (s) { return p.stickers.indexOf(s) === -1; });
+        if (pool.length) { newSticker = pool[Math.floor(Math.random() * pool.length)]; LW.addSticker(newSticker); }
+        var newBadges = checkBadges();
+        LW.fanfare(); LW.confetti(28);
+        app.innerHTML =
+          '<div class="overlay"><div class="card">' +
+            '<p class="big">📚</p><h2>Great reading!</h2>' +
+            '<p>You read <b>' + items.length + '</b> sentences &middot; +' + roundXP + ' XP.' +
+              (newSticker ? '<br>New sticker: <span style="font-size:34px">' + newSticker + '</span>' : '') + '</p>' +
+            newBadgeHTML(newBadges) +
+            '<button class="btn" id="again">Read more</button> <button class="btn ghost" id="back">Back to map</button>' +
+          '</div></div>';
+        app.querySelector("#again").onclick = renderSentence;
+        app.querySelector("#back").onclick = renderMap;
+      }
+
+      function show() {
+        if (pos >= items.length) { done(); return; }
+        var d = items[pos];
+        var mp = Math.round(pos / items.length * 100);
+        app.innerHTML =
+          '<div class="mini-wrap"><div class="mini-bar"><div class="mini-fill" style="width:' + mp + '%"></div></div>' +
+            '<span class="mini-txt">' + (pos + 1) + ' / ' + items.length + '</span></div>' +
+          '<p class="prompt center">Read it out loud!</p>' +
+          '<div class="stim" id="sstim">' +
+            '<div class="stim-emoji">' + d.e + '</div>' +
+            '<div class="stim-word" style="font-size:clamp(22px,6vw,32px);max-width:340px;text-align:center;line-height:1.3">' + d.s + '</div></div>' +
+          '<div class="trace-tools">' +
+            '<button class="btn ghost" id="hear">🔊 Hear</button>' +
+            '<button class="btn ghost" id="slow">🐢 Slowly</button>' +
+          '</div>' +
+          '<div class="center" style="margin-top:20px"><button class="btn big" id="said">📖 I read it!</button></div>';
+        setTimeout(function () { LW.say(d.s, 0.85); }, 300);
+        document.getElementById("sstim").onclick = function () { LW.say(d.s, 0.85); };
+        document.getElementById("hear").onclick = function () { LW.say(d.s, 0.85); };
+        document.getElementById("slow").onclick = function () { LW.say(d.s, 0.55); };
+        document.getElementById("said").onclick = function () {
+          LW.chime(true); LW.confetti(12); LW.addStar(1);
+          LW.awardXP(4); roundXP += 4;
+          LW.say("Great reading!", 0.9);
+          pos++; setTimeout(show, 1100);
         };
       }
       show();
