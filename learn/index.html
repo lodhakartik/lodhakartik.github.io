@@ -96,7 +96,7 @@
       { id:"wordlinks",    title:"Word Links",       emoji:"🔗", skill:"Vocabulary", kind:"link", url:"../games/word-association/" },
       { id:"readwords",    title:"Read Words",       emoji:"📖", skill:"Reading",    kind:"quiz", quiz:"pictureWord" },
       { id:"writing",      title:"Trace Letters",    emoji:"✍️", skill:"Writing",    kind:"write" },
-      { id:"speaking",     title:"Speaking",         emoji:"🗣️", skill:"Speaking",   kind:"soon" }
+      { id:"speaking",     title:"Say It!",          emoji:"🗣️", skill:"Speaking",   kind:"speak" }
     ];
 
     /* ---------- native quiz builders (use shared engine + content) ---------- */
@@ -238,6 +238,8 @@
           nodes += node(nd, '<button class="n-go link" data-link="' + nd.url + '">Play ↗</button>');
         } else if (nd.kind === "write") {
           nodes += node(nd, '<button class="n-go" data-write="1">Play →</button>');
+        } else if (nd.kind === "speak") {
+          nodes += node(nd, '<button class="n-go" data-speak="1">Play →</button>');
         } else {
           nodes += node(nd, '<button class="n-go" data-quiz="' + nd.id + '">Play →</button>');
         }
@@ -256,6 +258,9 @@
       });
       app.querySelectorAll("[data-write]").forEach(function (b) {
         b.onclick = function () { renderWrite(); };
+      });
+      app.querySelectorAll("[data-speak]").forEach(function (b) {
+        b.onclick = function () { renderSpeak(); };
       });
     }
     function node(nd, goHTML) {
@@ -458,6 +463,55 @@
       }
 
       showLetter();
+    }
+
+    /* ---------- Speaking: listen & repeat (no mic) ---------- */
+    function renderSpeak() {
+      btnSwitch.style.visibility = "hidden";
+      var items = LW.shuffle(C.WORDS.slice()).slice(0, 8);
+      var pos = 0, roundXP = 0;
+
+      function done() {
+        var newSticker = null;
+        var p = LW.Store.current();
+        var pool = STICKERS.filter(function (s) { return p.stickers.indexOf(s) === -1; });
+        if (pool.length) { newSticker = pool[Math.floor(Math.random() * pool.length)]; LW.addSticker(newSticker); }
+        LW.fanfare(); LW.confetti(28);
+        app.innerHTML =
+          '<div class="overlay"><div class="card">' +
+            '<p class="big">🗣️</p><h2>Super speaking!</h2>' +
+            '<p>You said <b>' + items.length + '</b> words &middot; +' + roundXP + ' XP.' +
+              (newSticker ? '<br>New sticker: <span style="font-size:34px">' + newSticker + '</span>' : '') + '</p>' +
+            '<button class="btn" id="again">Say more</button> <button class="btn ghost" id="back">Back to map</button>' +
+          '</div></div>';
+        app.querySelector("#again").onclick = renderSpeak;
+        app.querySelector("#back").onclick = renderMap;
+      }
+
+      function show() {
+        if (pos >= items.length) { done(); return; }
+        var d = items[pos];
+        app.innerHTML =
+          '<p class="prompt center">Listen, then say it out loud!</p>' +
+          '<div class="stim" id="sstim"><div class="stim-emoji">' + d.e + '</div><div class="stim-word">' + d.w + '</div></div>' +
+          '<div class="trace-tools">' +
+            '<button class="btn ghost" id="hear">🔊 Hear</button>' +
+            '<button class="btn ghost" id="slow">🐢 Slowly</button>' +
+          '</div>' +
+          '<div class="center" style="margin-top:20px"><button class="btn big" id="said">🎤 I said it!</button></div>' +
+          '<p class="center counts" style="margin-top:12px">' + (pos + 1) + ' / ' + items.length + '</p>';
+        setTimeout(function () { LW.say(d.w, 0.85); }, 300);
+        document.getElementById("sstim").onclick = function () { LW.say(d.w, 0.85); };
+        document.getElementById("hear").onclick = function () { LW.say(d.w, 0.85); };
+        document.getElementById("slow").onclick = function () { LW.say(d.w, 0.5); };
+        document.getElementById("said").onclick = function () {
+          LW.chime(true); LW.confetti(12); LW.addStar(1);
+          var r = LW.awardXP(3); roundXP += 3;
+          LW.say("Great speaking! " + d.w + "!", 0.85);
+          pos++; setTimeout(show, 1200);
+        };
+      }
+      show();
     }
 
     btnSwitch.onclick = renderGate;
