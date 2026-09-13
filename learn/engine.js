@@ -95,6 +95,35 @@ window.LW = (function () {
       g.gain.exponentialRampToValueAtTime(0.25, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
       o.start(t); o.stop(t + 0.32); }); } catch (e) {} }
 
+  /* ---------------- iOS / mobile audio unlock ----------------
+     iOS Safari (and some Android browsers) block speechSynthesis and
+     WebAudio until the FIRST real user gesture. Kids tap to start, so we
+     warm both engines on that very first tap — this stops the first
+     prompt of a session from being silent. Self-removes after one run. */
+  var unlocked = false;
+  function unlockAudio() {
+    if (unlocked) return; unlocked = true;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === "suspended") actx.resume();
+      var o = actx.createOscillator(), g = actx.createGain();
+      g.gain.value = 0.0001; o.connect(g); g.connect(actx.destination);
+      o.start(0); o.stop(actx.currentTime + 0.03);           // silent tick opens the output
+    } catch (e) {}
+    try {
+      if ("speechSynthesis" in window) {
+        var u = new SpeechSynthesisUtterance(" "); u.volume = 0;
+        window.speechSynthesis.speak(u);                      // primes the voice engine
+      }
+    } catch (e) {}
+    ["pointerdown", "touchend", "click", "keydown"].forEach(function (evt) {
+      window.removeEventListener(evt, unlockAudio);
+    });
+  }
+  ["pointerdown", "touchend", "click", "keydown"].forEach(function (evt) {
+    window.addEventListener(evt, unlockAudio, { passive: true });
+  });
+
   /* ---------------- FX (confetti) ---------------- */
   function confetti(n) { var em = ["⭐","🌟","✨","🎉","🎊","🌼"];
     for (var i = 0; i < (n || 16); i++) { var el = document.createElement("div"); el.className = "confetti";
